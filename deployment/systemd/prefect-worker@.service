@@ -1,0 +1,19 @@
+[Unit]
+Description=Prefect Worker for Data Warehouse (%i environment)
+After=network.target prefect-server.service
+Requires=prefect-server.service
+
+[Service]
+Type=simple
+User=%i
+WorkingDirectory=/path/to/data-warehouse
+Environment="PATH=/path/to/data-warehouse/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PREFECT_API_URL=http://127.0.0.1:4200/api"
+ExecStart=/path/to/data-warehouse/venv/bin/python -m orchestration.deploy --serve --environment %i
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/path/to/data-warehouse/logs/prefect-worker-%i.log
+StandardError=append:/path/to/data-warehouse/logs/prefect-worker-%i.log
+
+[Install]
+WantedBy=multi-user.target

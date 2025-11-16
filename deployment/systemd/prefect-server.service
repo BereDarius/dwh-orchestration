@@ -1,0 +1,17 @@
+[Unit]
+Description=Prefect Server for Data Warehouse Orchestration
+After=network.target
+
+[Service]
+Type=simple
+User=%i
+WorkingDirectory=/path/to/data-warehouse
+Environment="PATH=/path/to/data-warehouse/venv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/path/to/data-warehouse/venv/bin/prefect server start --host 127.0.0.1 --port 4200
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/path/to/data-warehouse/logs/prefect-server.log
+StandardError=append:/path/to/data-warehouse/logs/prefect-server.log
+
+[Install]
+WantedBy=multi-user.target
