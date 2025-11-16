@@ -1,0 +1,28 @@
+# GitHub Pipeline Trigger Configuration
+trigger:
+  name: github_hourly
+  description: "Fetch GitHub repository data every hour"
+
+  # Pipeline to execute
+  pipeline: github_to_duckdb
+
+  # Schedule configuration
+  schedule:
+    enabled: true
+    cron: "0 * * * *" # Every hour at minute 0
+    timezone: "UTC"
+
+  # Pipeline parameters (optional overrides)
+  parameters:
+    username: "torvalds"
+
+  # Retry configuration
+  retries:
+    max_attempts: 3
+    retry_delay_seconds: 60
+
+  # Tags for organization
+  tags:
+    - github
+    - hourly
+    - public-data

@@ -13,6 +13,7 @@ from ingestion.config.models import (
     PipelineConfig,
     SecretsConfig,
     SourceConfig,
+    TriggerConfig,
 )
 from ingestion.config.secrets_resolver import SecretsResolver
 
@@ -197,6 +198,49 @@ class ConfigLoader:
             pipelines[pipeline_config.name] = pipeline_config
 
         return pipelines
+
+    def load_trigger_config(self, filename: str) -> TriggerConfig:
+        """
+        Load trigger configuration.
+
+        Args:
+            filename: Name of the trigger config file
+
+        Returns:
+            TriggerConfig: Validated trigger configuration
+
+        Raises:
+            ValidationError: If configuration is invalid
+        """
+        file_path = self.config_path / "triggers" / filename
+        data = self._load_yaml(file_path)
+
+        # Extract the trigger configuration
+        trigger_data = data.get("trigger", {})
+
+        try:
+            return TriggerConfig(**trigger_data)
+        except ValidationError as e:
+            raise ValueError(f"Invalid trigger configuration in {filename}: {e}") from e
+
+    def load_all_triggers(self) -> dict[str, TriggerConfig]:
+        """
+        Load all trigger configurations for the current environment.
+
+        Returns:
+            Dict mapping trigger names to their configurations
+        """
+        triggers_path = self.config_path / "triggers"
+
+        if not triggers_path.exists():
+            return {}
+
+        triggers: dict[str, TriggerConfig] = {}
+        for config_file in triggers_path.glob("*.yaml"):
+            trigger_config = self.load_trigger_config(config_file.name)
+            triggers[trigger_config.name] = trigger_config
+
+        return triggers
 
     def load_all_sources(self) -> dict[str, SourceConfig]:
         """

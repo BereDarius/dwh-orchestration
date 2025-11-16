@@ -337,3 +337,38 @@ class SecretsConfig(BaseModel):
     environment: Environment
     secrets: dict[str, SecretMapping]
     validation: SecretsValidation
+
+
+class TriggerScheduleConfig(BaseModel):
+    """Trigger schedule configuration."""
+
+    enabled: bool = True
+    cron: str = "0 0 * * *"  # Daily at midnight by default
+    timezone: str = "UTC"
+
+
+class TriggerExecutionConfig(BaseModel):
+    """Trigger execution configuration."""
+
+    parallel: bool = False
+    continue_on_failure: bool = False
+
+
+class TriggerRetryConfig(BaseModel):
+    """Trigger-specific retry configuration."""
+
+    max_attempts: int = Field(default=3, ge=1, le=10)
+    retry_delay_seconds: int = Field(default=60, ge=0)
+
+
+class TriggerConfig(BaseModel):
+    """Pipeline trigger configuration."""
+
+    name: str
+    description: str | None = None
+    pipeline: str  # Pipeline name or "*" for all pipelines
+    schedule: TriggerScheduleConfig
+    parameters: dict[str, Any] = Field(default_factory=dict)
+    execution: TriggerExecutionConfig = Field(default_factory=TriggerExecutionConfig)
+    retries: TriggerRetryConfig = Field(default_factory=TriggerRetryConfig)
+    tags: list[str] = Field(default_factory=list)
