@@ -1,272 +1,102 @@
-# Prefect Orchestration Configuration
+# Prefect Orchestration - Updated for Prefect 3.x
 
-This directory contains Prefect flows for orchestrating data ingestion pipelines.
+This directory contains Prefect 3.x flows for orchestrating data ingestion pipelines.
 
-## Quick Start
+## Quick Start (3 Steps)
 
 ### 1. Start Prefect Server
-
-```bash
-./scripts/start_prefect.sh
-```
-
-The Prefect UI will be available at http://127.0.0.1:4200
-
-### 2. Deploy Flows (in another terminal)
-
-```bash
+\`\`\`bash
 source venv/bin/activate
-python -m orchestration.flows --deploy
-```
+prefect config set PREFECT_API_URL="http://127.0.0.1:4200/api"
+prefect server start --host 127.0.0.1
+\`\`\`
+UI available at: **http://127.0.0.1:4200**
 
-This creates three deployments:
-
-- **single-pipeline-manual** - Manual trigger for any pipeline
-- **all-pipelines-daily** - Runs all pipelines daily at 2 AM UTC
-- **github-pipeline-hourly** - Fetches GitHub data every hour
-
-### 3. Start a Worker
-
-```bash
+### 2. Run a Flow
+\`\`\`bash
+# In another terminal
 source venv/bin/activate
-prefect worker start --pool default
-```
-
-## Manual Flow Execution
-
-Run flows without the server:
-
-```bash
-# Run GitHub pipeline for a specific user
 python -m orchestration.flows --github-user torvalds
+\`\`\`
 
-# Run all configured pipelines
+### 3. View in UI
+Open http://127.0.0.1:4200/runs to see your flow execution!
+
+## Available Commands
+
+\`\`\`bash
+# GitHub pipeline with custom user
+python -m orchestration.flows --github-user python
+
+# Run all pipelines in parallel
 python -m orchestration.flows --all
 
-# Run a specific pipeline
-python -m orchestration.flows --pipeline github_to_duckdb --environment dev
-```
-
-## Available Flows
-
-### `single_pipeline_flow`
-
-Execute any single pipeline by name.
-
-**Parameters:**
-
-- `pipeline_name` (str): Name of the pipeline (e.g., "github_to_duckdb")
-- `environment` (str): Environment - dev/stage/prod (default: "dev")
-
-**Usage:**
-
-```bash
+# Run specific pipeline
 python -m orchestration.flows --pipeline mock_to_duckdb
-```
+\`\`\`
 
-### `all_pipelines_flow`
+## Prefect 3.x Changes
 
-Execute all configured pipelines in parallel.
+**Old way (Prefect 2.x):**
+\`\`\`python
+# Deployment.build_from_flow() - REMOVED in 3.x
+deployment = Deployment.build_from_flow(...)
+\`\`\`
 
-**Parameters:**
+**New way (Prefect 3.x):**
+\`\`\`bash
+# Option 1: prefect.yaml (recommended)
+prefect init
+prefect deploy --all
 
-- `environment` (str): Environment - dev/stage/prod (default: "dev")
-- `pipeline_names` (list[str], optional): Specific pipelines to run (auto-discovers if None)
+# Option 2: flow.serve()
+flow.serve(name="my-flow", cron="0 * * * *")
 
-**Usage:**
+# Option 3: flow.deploy()
+flow.deploy(name="my-flow", cron="0 * * * *")
+\`\`\`
 
-```bash
-python -m orchestration.flows --all --environment dev
-```
+## Scheduling Deployments
 
-### `github_pipeline_flow`
+### Using prefect.yaml
+\`\`\`yaml
+deployments:
+  - name: github-hourly
+    entrypoint: orchestration/flows.py:github_pipeline_flow
+    schedule:
+      cron: "0 * * * *"
+      timezone: "UTC"
+    parameters:
+      username: "torvalds"
+\`\`\`
 
-Execute GitHub pipeline with custom username parameter.
+Then: `prefect deploy --all`
 
-**Parameters:**
+## Features
 
-- `username` (str): GitHub username (default: "torvalds")
-- `environment` (str): Environment - dev/stage/prod (default: "dev")
-
-**Usage:**
-
-```bash
-python -m orchestration.flows --github-user python
-```
-
-## Prefect UI Features
-
-Once the server is running, visit http://127.0.0.1:4200 to:
-
-- **View flow runs** - See real-time execution status
-- **Trigger deployments** - Manually run scheduled flows
-- **Monitor logs** - View detailed execution logs
-- **Track metrics** - See rows processed, duration, success/failure
-- **Manage schedules** - Adjust cron schedules
-- **View artifacts** - Inspect pipeline results
-
-## Deployment Schedules
-
-### All Pipelines - Daily
-
-- **Schedule:** Daily at 2:00 AM UTC
-- **Cron:** `0 2 * * *`
-- **Purpose:** Full refresh of all data sources
-
-### GitHub Pipeline - Hourly
-
-- **Schedule:** Every hour on the hour
-- **Cron:** `0 * * * *`
-- **Purpose:** Keep repository data fresh
-
-## Modifying Schedules
-
-Edit `orchestration/flows.py` and update the `CronSchedule` in `create_deployments()`:
-
-```python
-schedule=CronSchedule(cron="0 */6 * * *", timezone="UTC")  # Every 6 hours
-```
-
-Then redeploy:
-
-```bash
-python -m orchestration.flows --deploy
-```
-
-## Retry Configuration
-
-Pipelines automatically retry on failure:
-
-- **Max retries:** 3
-- **Retry delay:** 60 seconds
-- **Exponential backoff:** Managed by Prefect
-
-Customize in the `@task` decorator:
-
-```python
-@task(
-    retries=5,
-    retry_delay_seconds=120,
-)
-```
-
-## Parallel Execution
-
-The `all_pipelines_flow` executes pipelines in parallel using Prefect's task concurrency.
-
-To control parallelism, set task runner:
-
-```python
-@flow(task_runner=DaskTaskRunner())
-def all_pipelines_flow(...):
-    ...
-```
-
-## Monitoring & Alerts
-
-### View in UI
-
-- Flow runs: http://127.0.0.1:4200/flow-runs
-- Logs: Click any flow run for detailed logs
-
-### CLI Monitoring
-
-```bash
-# Watch flow runs
-prefect flow-run ls --limit 10
-
-# View specific run logs
-prefect flow-run logs <flow-run-id>
-```
-
-## Production Deployment
-
-For production, use:
-
-1. **Prefect Cloud** (recommended)
-
-   - Managed service with full features
-   - Sign up at https://app.prefect.cloud
-
-2. **Self-hosted Server**
-
-   - Deploy with Docker
-   - Configure PostgreSQL backend
-   - Set up worker pools
-
-3. **GitHub Actions / Airflow**
-   - Run flows via CI/CD
-   - Keep using Prefect for local dev
-
-## Architecture
-
-```
-orchestration/
-├── __init__.py
-├── flows.py          # Prefect flow definitions
-└── README.md         # This file
-
-Flow Execution:
-┌─────────────┐
-│ Prefect     │
-│ Scheduler   │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ Flow        │ ─── Wraps existing framework
-│ (Task)      │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ Pipeline    │
-│ Executor    │ ─── Your existing code
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ DLT + Data  │
-│ Sources     │
-└─────────────┘
-```
+✅ **Auto-tracking** - All runs appear in UI automatically  
+✅ **Parallel execution** - Multiple pipelines run concurrently  
+✅ **Retry logic** - 3 attempts, 60s delay  
+✅ **Real-time logs** - Stream logs in UI  
+✅ **Metrics** - Rows processed, duration, success/failure  
 
 ## Troubleshooting
 
-### Server won't start
+\`\`\`bash
+# Server not starting
+prefect config set PREFECT_API_URL="http://127.0.0.1:4200/api"
 
-```bash
-# Reset database
-prefect server database reset -y
+# Check server status
+curl http://127.0.0.1:4200/api/health
 
-# Start with debug logging
-prefect server start --log-level DEBUG
-```
+# View configuration
+prefect config view
+\`\`\`
 
-### Deployments not showing
+## Production
 
-```bash
-# List deployments
-prefect deployment ls
+- **Prefect Cloud**: https://app.prefect.cloud (managed)
+- **Self-hosted**: Docker + PostgreSQL backend
+- **Hybrid**: Cloud UI + local workers
 
-# Rebuild deployment
-python -m orchestration.flows --deploy
-```
-
-### Worker not picking up runs
-
-```bash
-# Check worker pools
-prefect work-pool ls
-
-# Start worker with debug
-prefect worker start --pool default --log-level DEBUG
-```
-
-## Next Steps
-
-1. **Add more flows** - Create custom flows for specific use cases
-2. **Configure notifications** - Set up Slack/email alerts on failure
-3. **Add data quality checks** - Integrate Great Expectations results
-4. **Scale with Dask** - Use DaskTaskRunner for large datasets
-5. **Deploy to production** - Use Prefect Cloud or self-hosted server
+See full documentation in the original README or Prefect docs.
