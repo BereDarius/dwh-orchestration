@@ -1,0 +1,41 @@
+# Mock REST API Source Configuration (Development)
+# Simulates a REST API without requiring real credentials
+source:
+  name: mock_api
+  type: rest_api
+  description: "Mock REST API for local testing (uses JSONPlaceholder)"
+  environment: dev
+
+  connection:
+    base_url: "https://jsonplaceholder.typicode.com"
+    # No auth needed for JSONPlaceholder
+    timeout: 30
+    retry:
+      max_attempts: 3
+      backoff_factor: 2
+      backoff_max: 60
+
+  resources:
+    - name: users
+      description: "User data from JSONPlaceholder"
+      endpoint: "/users"
+      method: GET
+
+      primary_key: ["id"]
+      write_disposition: "replace"
+
+    - name: posts
+      description: "Posts data from JSONPlaceholder"
+      endpoint: "/posts"
+      method: GET
+
+      primary_key: ["id"]
+      write_disposition: "replace"
+
+    - name: comments
+      description: "Comments data from JSONPlaceholder"
+      endpoint: "/comments"
+      method: GET
+
+      primary_key: ["id"]
+      write_disposition: "replace"

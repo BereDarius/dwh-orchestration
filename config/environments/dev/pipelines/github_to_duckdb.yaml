@@ -1,0 +1,50 @@
+# GitHub to DuckDB Pipeline Configuration (Development)
+pipeline:
+  name: github_to_duckdb
+  description: "Analyze GitHub repository activity and statistics"
+  environment: dev
+
+  source:
+    config_file: "sources/github_api.yaml"
+    resources:
+      - repos
+    params:
+      username: "torvalds" # Linus Torvalds' repos - interesting data!
+
+  destination:
+    config_file: "destinations/duckdb_local.yaml"
+    dataset_name: "github_analytics"
+
+  schedule:
+    enabled: false
+    cron: "0 */12 * * *" # Every 12 hours
+    timezone: "America/New_York"
+
+  execution:
+    enabled: true
+    timeout: 600
+    retries: 2
+    retry_delay: 60
+    parallel: false
+
+  transformations:
+    enabled: false
+    post_load: []
+
+  monitoring:
+    enabled: true
+    metrics:
+      - row_count
+      - load_duration
+      - data_freshness
+
+  alerts:
+    enabled: false
+
+  tags:
+    - github
+    - open-source
+    - analytics
+
+  owner: "data-engineering"
+  sla_hours: 24

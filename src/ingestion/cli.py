@@ -2,8 +2,6 @@
 
 import os
 import sys
-from pathlib import Path
-from typing import Optional
 
 import click
 from dotenv import load_dotenv
@@ -12,7 +10,7 @@ from rich.table import Table
 
 from ingestion.config import ConfigLoader, ConfigValidator
 from ingestion.config.models import Environment
-from ingestion.pipelines import PipelineExecutor, PipelineFactory
+from ingestion.pipelines import PipelineExecutor
 from ingestion.utils.logging import setup_logging
 
 console = Console()

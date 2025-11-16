@@ -1,6 +1,7 @@
 """Source factory for creating source instances."""
 
-from typing import Any, Dict, Iterator, List
+from collections.abc import Iterator
+from typing import Any
 
 from dlt.extract.resource import DltResource
 
@@ -21,7 +22,7 @@ class SourceFactory:
     def create_source(
         self,
         config: SourceConfig,
-        params: Dict[str, Any],
+        params: dict[str, Any],
     ) -> BaseSource:
         """
         Create a source instance from configuration.
@@ -49,8 +50,8 @@ class SourceFactory:
     def create_resources(
         self,
         config: SourceConfig,
-        resource_names: List[str],
-        params: Dict[str, Any],
+        resource_names: list[str],
+        params: dict[str, Any],
     ) -> Iterator[DltResource]:
         """
         Create DLT resources from source configuration.

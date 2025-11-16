@@ -40,8 +40,8 @@ class TestSourceFactory:
     def test_init(self, factory: SourceFactory) -> None:
         """Test SourceFactory initialization."""
         assert hasattr(factory, "_source_map")
-        assert SourceType.REST_API in factory._source_map
-        assert factory._source_map[SourceType.REST_API] == RestApiSource
+        assert SourceType.REST_API in factory._source_map  # type: ignore[attr-defined]
+        assert factory._source_map[SourceType.REST_API] == RestApiSource  # type: ignore[attr-defined]
 
     def test_create_source_rest_api(
         self, factory: SourceFactory, rest_api_config: SourceConfig

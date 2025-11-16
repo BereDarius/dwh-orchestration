@@ -1,0 +1,37 @@
+# DuckDB Local Destination Configuration (Development)
+destination:
+  name: duckdb_local
+  type: duckdb
+  description: "Local DuckDB database for development and testing"
+  environment: dev
+
+  connection:
+    # Database file path (relative to project root)
+    database: "data/local.duckdb"
+
+    # Connection settings
+    read_only: false
+    timeout: 300
+
+  settings:
+    # Table settings
+    partition_by: []
+    cluster_by: []
+
+    # Write settings
+    write_mode: "append" # append, overwrite, merge
+
+    # Schema settings
+    schema_evolution: true
+    case_sensitive: false
+
+  # Performance tuning
+  performance:
+    batch_size: 10000
+    max_parallel_loads: 4
+    enable_profiling: false
+
+  # Data retention (optional)
+  retention:
+    enabled: false
+    days: 90

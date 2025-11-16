@@ -172,6 +172,10 @@ class SourceConfig(BaseModel):
 class DestinationConnectionConfig(BaseModel):
     """Destination connection configuration."""
 
+    # DuckDB fields
+    database: str | None = None
+
+    # Databricks fields
     server_hostname_secret_key: str | None = None
     http_path_secret_key: str | None = None
     access_token_secret_key: str | None = None

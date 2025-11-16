@@ -1,0 +1,51 @@
+# Mock API to DuckDB Pipeline Configuration (Development)
+pipeline:
+  name: mock_to_duckdb
+  description: "Load mock data from JSONPlaceholder to local DuckDB"
+  environment: dev
+
+  source:
+    config_file: "sources/mock_api.yaml"
+    resources:
+      - users
+      - posts
+      - comments
+    params: {}
+
+  destination:
+    config_file: "destinations/duckdb_local.yaml"
+    dataset_name: "mock_data"
+
+  schedule:
+    enabled: false
+    cron: "0 */6 * * *" # Every 6 hours
+    timezone: "America/New_York"
+
+  execution:
+    enabled: true
+    timeout: 300
+    retries: 2
+    retry_delay: 60
+    parallel: false
+
+  transformations:
+    enabled: false
+    post_load: []
+
+  monitoring:
+    enabled: true
+    metrics:
+      - row_count
+      - load_duration
+      - data_freshness
+
+  alerts:
+    enabled: false
+
+  tags:
+    - local
+    - testing
+    - mock
+
+  owner: "data-engineering"
+  sla_hours: 24

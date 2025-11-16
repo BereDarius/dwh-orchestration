@@ -74,7 +74,7 @@ class ConfigLoader:
         Load source configuration.
 
         Args:
-            filename: Name of the source config file
+            filename: Name of the source config file (with or without sources/ prefix)
 
         Returns:
             SourceConfig: Validated source configuration
@@ -82,6 +82,10 @@ class ConfigLoader:
         Raises:
             ValidationError: If configuration is invalid
         """
+        # Remove sources/ prefix if present (loader adds it)
+        if filename.startswith("sources/"):
+            filename = filename[8:]  # Remove "sources/" prefix
+
         file_path = self.config_path / "sources" / filename
         data = self._load_yaml(file_path)
 
@@ -102,7 +106,7 @@ class ConfigLoader:
         Load destination configuration.
 
         Args:
-            filename: Name of the destination config file
+            filename: Name of the destination config file (with or without destinations/ prefix)
 
         Returns:
             DestinationConfig: Validated destination configuration
@@ -110,6 +114,10 @@ class ConfigLoader:
         Raises:
             ValidationError: If configuration is invalid
         """
+        # Remove destinations/ prefix if present (loader adds it)
+        if filename.startswith("destinations/"):
+            filename = filename[13:]  # Remove "destinations/" prefix
+
         file_path = self.config_path / "destinations" / filename
         data = self._load_yaml(file_path)
 

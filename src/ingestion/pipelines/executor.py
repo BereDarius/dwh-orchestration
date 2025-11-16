@@ -2,9 +2,8 @@
 
 import time
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
-import dlt
 from dlt.common.pipeline import LoadInfo
 
 from ingestion.config.models import PipelineConfig, SourceConfig
@@ -21,11 +20,11 @@ class PipelineExecutionResult:
         self,
         pipeline_name: str,
         success: bool,
-        load_info: Optional[LoadInfo] = None,
-        error: Optional[Exception] = None,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None,
-        metrics: Optional[Dict[str, Any]] = None,
+        load_info: LoadInfo | None = None,
+        error: Exception | None = None,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+        metrics: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize execution result.
@@ -56,10 +55,10 @@ class PipelineExecutionResult:
     def rows_processed(self) -> int:
         """Get number of rows processed."""
         if self.load_info and hasattr(self.load_info, "row_counts"):
-            return sum(self.load_info.row_counts.values())
+            return sum(self.load_info.row_counts.values())  # type: ignore[attr-defined]
         return 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert result to dictionary."""
         return {
             "pipeline_name": self.pipeline_name,
@@ -76,7 +75,7 @@ class PipelineExecutionResult:
 class PipelineExecutor:
     """Executes DLT pipelines based on configuration."""
 
-    def __init__(self, pipeline_factory: Optional[PipelineFactory] = None) -> None:
+    def __init__(self, pipeline_factory: PipelineFactory | None = None) -> None:
         """
         Initialize pipeline executor.
 
@@ -88,8 +87,8 @@ class PipelineExecutor:
     def execute_pipeline(
         self,
         pipeline_name: str,
-        pipeline_config: Optional[PipelineConfig] = None,
-        source_config: Optional[SourceConfig] = None,
+        pipeline_config: PipelineConfig | None = None,
+        source_config: SourceConfig | None = None,
     ) -> PipelineExecutionResult:
         """
         Execute a pipeline.
@@ -162,8 +161,8 @@ class PipelineExecutor:
     def execute_pipeline_with_retry(
         self,
         pipeline_name: str,
-        max_retries: Optional[int] = None,
-        retry_delay: Optional[int] = None,
+        max_retries: int | None = None,
+        retry_delay: int | None = None,
     ) -> PipelineExecutionResult:
         """
         Execute pipeline with retry logic.
@@ -204,7 +203,7 @@ class PipelineExecutor:
         return last_result
 
     @staticmethod
-    def _extract_metrics(load_info: LoadInfo) -> Dict[str, Any]:
+    def _extract_metrics(load_info: LoadInfo) -> dict[str, Any]:
         """
         Extract metrics from load info.
 
@@ -214,14 +213,14 @@ class PipelineExecutor:
         Returns:
             Dictionary of metrics
         """
-        metrics: Dict[str, Any] = {}
+        metrics: dict[str, Any] = {}
 
         if hasattr(load_info, "row_counts"):
-            metrics["row_counts"] = dict(load_info.row_counts)
-            metrics["total_rows"] = sum(load_info.row_counts.values())
+            metrics["row_counts"] = dict(load_info.row_counts)  # type: ignore[attr-defined]
+            metrics["total_rows"] = sum(load_info.row_counts.values())  # type: ignore[attr-defined]
 
         if hasattr(load_info, "load_id"):
-            metrics["load_id"] = load_info.load_id
+            metrics["load_id"] = load_info.load_id  # type: ignore[attr-defined]
 
         if hasattr(load_info, "destination_name"):
             metrics["destination"] = load_info.destination_name

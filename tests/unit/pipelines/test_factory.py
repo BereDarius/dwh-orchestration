@@ -178,7 +178,7 @@ class TestPipelineFactory:
         mock_destination_config = MagicMock()
         mock_destination_config.type.value = DestinationType.DATABRICKS.value
 
-        result = PipelineFactory._get_destination_name(mock_destination_config)
+        result = PipelineFactory._get_destination_name(mock_destination_config)  # type: ignore[attr-defined]
         assert result == "databricks"
 
     @patch("ingestion.pipelines.factory.ConfigLoader")
@@ -191,7 +191,7 @@ class TestPipelineFactory:
         mock_destination_config = MagicMock()
         mock_destination_config.type.value = DestinationType.SNOWFLAKE.value
 
-        result = PipelineFactory._get_destination_name(mock_destination_config)
+        result = PipelineFactory._get_destination_name(mock_destination_config)  # type: ignore[attr-defined]
         assert result == "snowflake"
 
     @patch("ingestion.pipelines.factory.ConfigLoader")
@@ -204,7 +204,7 @@ class TestPipelineFactory:
         mock_destination_config = MagicMock()
         mock_destination_config.type.value = DestinationType.BIGQUERY.value
 
-        result = PipelineFactory._get_destination_name(mock_destination_config)
+        result = PipelineFactory._get_destination_name(mock_destination_config)  # type: ignore[attr-defined]
         assert result == "bigquery"
 
     @patch("ingestion.pipelines.factory.ConfigLoader")
@@ -217,7 +217,7 @@ class TestPipelineFactory:
         mock_destination_config = MagicMock()
         mock_destination_config.type.value = DestinationType.POSTGRES.value
 
-        result = PipelineFactory._get_destination_name(mock_destination_config)
+        result = PipelineFactory._get_destination_name(mock_destination_config)  # type: ignore[attr-defined]
         assert result == "postgres"
 
     @patch("ingestion.pipelines.factory.ConfigLoader")
@@ -230,7 +230,7 @@ class TestPipelineFactory:
         mock_destination_config = MagicMock()
         mock_destination_config.type.value = DestinationType.DUCKDB.value
 
-        result = PipelineFactory._get_destination_name(mock_destination_config)
+        result = PipelineFactory._get_destination_name(mock_destination_config)  # type: ignore[attr-defined]
         assert result == "duckdb"
 
     @patch("ingestion.pipelines.factory.dlt.pipeline")

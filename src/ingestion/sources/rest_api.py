@@ -1,12 +1,12 @@
 """REST API source implementation."""
 
-from typing import Any, Dict, Iterator, List, Optional
+from collections.abc import Iterator
+from typing import Any
 
-import dlt
 from dlt.extract.resource import DltResource
 from dlt.sources.rest_api import rest_api_resources
 
-from ingestion.config.models import ResourceConfig, SourceConfig
+from ingestion.config.models import ResourceConfig
 from ingestion.sources.base import BaseSource
 from ingestion.utils.logging import get_logger
 
@@ -18,7 +18,7 @@ class RestApiSource(BaseSource):
 
     def create_resources(
         self,
-        resource_names: List[str],
+        resource_names: list[str],
     ) -> Iterator[DltResource]:
         """
         Create DLT resources for REST API endpoints.
@@ -37,7 +37,7 @@ class RestApiSource(BaseSource):
             rest_api_config = self._build_rest_api_config(resource_config)
 
             # Create resource using DLT's rest_api_resources
-            for resource in rest_api_resources(rest_api_config):
+            for resource in rest_api_resources(rest_api_config):  # type: ignore[arg-type]
                 # Apply write disposition (write_disposition always has default value APPEND,
                 # so this condition is always True - branch 42->48 is unreachable)
                 if resource_config.write_disposition:  # pragma: no branch
@@ -51,7 +51,7 @@ class RestApiSource(BaseSource):
 
                 yield resource
 
-    def _build_rest_api_config(self, resource_config: ResourceConfig) -> Dict[str, Any]:
+    def _build_rest_api_config(self, resource_config: ResourceConfig) -> dict[str, Any]:
         """
         Build DLT rest_api configuration from resource config.
 
@@ -61,7 +61,7 @@ class RestApiSource(BaseSource):
         Returns:
             DLT rest_api configuration dictionary
         """
-        config: Dict[str, Any] = {
+        config: dict[str, Any] = {
             "client": {
                 "base_url": self.config.connection.base_url,
             },
@@ -94,7 +94,7 @@ class RestApiSource(BaseSource):
 
         return config
 
-    def _build_auth_config(self) -> Optional[Dict[str, Any]]:
+    def _build_auth_config(self) -> dict[str, Any] | None:
         """
         Build authentication configuration.
 
@@ -105,7 +105,7 @@ class RestApiSource(BaseSource):
             return None
 
         auth = self.config.connection.auth
-        auth_config: Dict[str, Any] = {
+        auth_config: dict[str, Any] = {
             "type": auth.type.value,
         }
 
@@ -123,7 +123,7 @@ class RestApiSource(BaseSource):
 
         return auth_config
 
-    def _resolve_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def _resolve_params(self, params: dict[str, Any]) -> dict[str, Any]:
         """
         Resolve parameter placeholders with runtime values.
 
@@ -147,4 +147,4 @@ class RestApiSource(BaseSource):
             else:
                 resolved[key] = value
 
-        return resolved
+        return resolved  # type: ignore[return-value]

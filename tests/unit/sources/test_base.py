@@ -1,6 +1,6 @@
 """Unit tests for BaseSource."""
 
-from typing import Any, Iterator
+from collections.abc import Iterator
 
 import pytest
 from dlt.extract.resource import DltResource

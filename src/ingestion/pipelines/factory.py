@@ -1,25 +1,19 @@
 """Pipeline factory for creating DLT pipelines from configuration."""
 
-from typing import Any, Dict, Iterator, Optional
+from typing import Any
 
 import dlt
-from dlt.common.typing import TDataItem
 from dlt.extract.resource import DltResource
 
 from ingestion.config.loader import ConfigLoader
-from ingestion.config.models import (
-    DestinationConfig,
-    Environment,
-    PipelineConfig,
-    SourceConfig,
-)
+from ingestion.config.models import DestinationConfig, Environment, PipelineConfig, SourceConfig
 from ingestion.sources.factory import SourceFactory
 
 
 class PipelineFactory:
     """Factory for creating DLT pipelines from YAML configuration."""
 
-    def __init__(self, environment: Optional[Environment] = None) -> None:
+    def __init__(self, environment: Environment | None = None) -> None:
         """
         Initialize pipeline factory.
 
@@ -32,8 +26,8 @@ class PipelineFactory:
     def create_pipeline(
         self,
         pipeline_config: PipelineConfig,
-        source_config: Optional[SourceConfig] = None,
-        destination_config: Optional[DestinationConfig] = None,
+        source_config: SourceConfig | None = None,
+        destination_config: DestinationConfig | None = None,
     ) -> dlt.Pipeline:
         """
         Create a DLT pipeline from configuration.
@@ -57,10 +51,24 @@ class PipelineFactory:
                 pipeline_config.destination.config_file
             )
 
+        # Prepare destination with credentials for DuckDB
+        import os
+
+        destination_ref = self._get_destination_name(destination_config)
+
+        if (
+            destination_config.type.value == "duckdb"
+            and destination_config.connection.database is not None
+        ):
+            # For DuckDB, pass the database path as credentials
+            destination_ref = dlt.destinations.duckdb(
+                credentials=os.path.join(os.getcwd(), destination_config.connection.database)
+            )
+
         # Create DLT pipeline
         pipeline = dlt.pipeline(
             pipeline_name=pipeline_config.name,
-            destination=self._get_destination_name(destination_config),
+            destination=destination_ref,
             dataset_name=pipeline_config.destination.dataset_name,
             progress="log",
         )
@@ -71,7 +79,7 @@ class PipelineFactory:
         self,
         source_config: SourceConfig,
         pipeline_config: PipelineConfig,
-    ) -> Iterator[DltResource]:
+    ) -> list[DltResource]:
         """
         Create DLT source from configuration.
 
@@ -80,7 +88,7 @@ class PipelineFactory:
             pipeline_config: Pipeline configuration
 
         Returns:
-            DLT source with configured resources
+            List of DLT resources
         """
         # Use source factory to create the source
         source_factory = SourceFactory()
@@ -91,13 +99,14 @@ class PipelineFactory:
         # Get runtime parameters
         params = pipeline_config.source.params
 
-        # Create and yield resources
-        for resource in source_factory.create_resources(
-            source_config,
-            requested_resources,
-            params,
-        ):
-            yield resource
+        # Create and return list of resources
+        return list(
+            source_factory.create_resources(
+                source_config,
+                requested_resources,
+                params,
+            )
+        )
 
     def load_and_create_pipeline(self, pipeline_name: str) -> dlt.Pipeline:
         """
@@ -148,7 +157,7 @@ class PipelineFactory:
     def get_destination_credentials(
         self,
         destination_config: DestinationConfig,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get destination credentials from configuration.
 
@@ -158,7 +167,7 @@ class PipelineFactory:
         Returns:
             Dictionary of credentials for the destination
         """
-        credentials: Dict[str, Any] = {}
+        credentials: dict[str, Any] = {}
 
         if destination_config.type.value == "databricks":
             # Credentials were already resolved by secrets_resolver
@@ -167,7 +176,7 @@ class PipelineFactory:
                 "http_path": destination_config.connection.http_path_secret_key,
                 "access_token": destination_config.connection.access_token_secret_key,
                 "catalog": destination_config.connection.catalog,
-                "schema": destination_config.connection.schema,
+                "schema": destination_config.connection.db_schema,
             }
 
         return credentials

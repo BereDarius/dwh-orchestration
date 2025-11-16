@@ -1,7 +1,8 @@
 """Base source interface."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterator, List
+from collections.abc import Iterator
+from typing import Any
 
 from dlt.extract.resource import DltResource
 
@@ -11,7 +12,7 @@ from ingestion.config.models import ResourceConfig, SourceConfig
 class BaseSource(ABC):
     """Base class for all data sources."""
 
-    def __init__(self, config: SourceConfig, params: Dict[str, Any]) -> None:
+    def __init__(self, config: SourceConfig, params: dict[str, Any]) -> None:
         """
         Initialize source.
 
@@ -25,7 +26,7 @@ class BaseSource(ABC):
     @abstractmethod
     def create_resources(
         self,
-        resource_names: List[str],
+        resource_names: list[str],
     ) -> Iterator[DltResource]:
         """
         Create DLT resources for this source.

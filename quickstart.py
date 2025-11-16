@@ -114,9 +114,9 @@ def check_environment() -> bool:
     # Check required secrets
     required_secrets = [
         "YOUTUBE_API_KEY_DEV",
-        "DATABRICKS_SERVER_HOSTNAME_DEV",
+        "DATABRICKS_HOST_DEV",
         "DATABRICKS_HTTP_PATH_DEV",
-        "DATABRICKS_ACCESS_TOKEN_DEV",
+        "DATABRICKS_TOKEN_DEV",
     ]
 
     all_ok = True

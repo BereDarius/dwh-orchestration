@@ -1,0 +1,63 @@
+# GitHub API Source Configuration (Development)
+# Pulls repository and commit data from GitHub's public API
+source:
+  name: github_api
+  type: rest_api
+  description: "GitHub API for repository statistics and activity"
+  environment: dev
+
+  connection:
+    base_url: "https://api.github.com"
+    # GitHub API doesn't require auth for public data, but has rate limits
+    # Add a token in .env for higher limits: GITHUB_TOKEN_DEV
+    timeout: 30
+    retry:
+      max_attempts: 3
+      backoff_factor: 2
+      backoff_max: 60
+
+  resources:
+    - name: repos
+      description: "Repository information for a specific user/org"
+      endpoint: "/users/{username}/repos"
+      method: GET
+      params:
+        username: "{username}"
+        type: "all"
+        sort: "updated"
+        per_page: 100
+
+      primary_key: ["id"]
+      write_disposition: "merge"
+
+    - name: commits
+      description: "Recent commits for a repository"
+      endpoint: "/repos/{owner}/{repo}/commits"
+      method: GET
+      params:
+        per_page: 100
+
+      primary_key: ["sha"]
+      write_disposition: "append"
+
+    - name: issues
+      description: "Issues for a repository"
+      endpoint: "/repos/{owner}/{repo}/issues"
+      method: GET
+      params:
+        state: "all"
+        per_page: 100
+
+      primary_key: ["id"]
+      write_disposition: "merge"
+
+    - name: pull_requests
+      description: "Pull requests for a repository"
+      endpoint: "/repos/{owner}/{repo}/pulls"
+      method: GET
+      params:
+        state: "all"
+        per_page: 100
+
+      primary_key: ["id"]
+      write_disposition: "merge"
