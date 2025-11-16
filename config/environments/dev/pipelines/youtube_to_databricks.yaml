@@ -1,0 +1,87 @@
+# YouTube to Databricks Pipeline Configuration (Development)
+pipeline:
+  name: youtube_to_databricks
+  description: "Ingest YouTube channel and video data into Databricks"
+  environment: dev
+
+  # Source configuration
+  source:
+    config_file: "sources/youtube_api.yaml"
+    resources:
+      - channel_stats
+      - videos
+
+    # Runtime parameters
+    params:
+      channel_id: "UCqj7Cz7revf5maW9g5pgNcg" # Example: Python YouTube channel
+      max_videos: 100
+
+  # Destination configuration
+  destination:
+    config_file: "destinations/databricks.yaml"
+    dataset_name: "youtube_analytics"
+
+  # Pipeline settings
+  schedule:
+    enabled: true
+    cron: "0 */6 * * *" # Every 6 hours in dev
+    timezone: "UTC"
+    catchup: false
+    max_active_runs: 1
+
+  execution:
+    # Execution settings
+    parallelism: 2
+    timeout: 3600 # 1 hour
+    retries: 2
+    retry_delay: 300 # 5 minutes
+
+    # Resource limits
+    max_memory_mb: 2048
+    max_cpu_cores: 2
+
+  # Data processing
+  transformations:
+    enabled: false # No transformations in raw layer
+
+  data_quality:
+    enabled: true
+    fail_on_error: false # Don't fail pipeline on DQ issues in dev
+
+    checks:
+      - name: freshness_check
+        type: freshness
+        column: "_extracted_at"
+        max_age_hours: 12
+
+      - name: completeness_check
+        type: completeness
+        required_columns: ["id", "title", "published_at"]
+
+      - name: volume_check
+        type: volume
+        min_rows: 1
+        max_rows: 1000000
+
+  # Monitoring and alerts
+  monitoring:
+    enabled: true
+    metrics:
+      - rows_processed
+      - execution_time
+      - error_count
+      - data_quality_score
+
+  alerts:
+    enabled: false # Disabled in dev
+    channels: []
+
+  # Metadata
+  tags:
+    - youtube
+    - social_media
+    - analytics
+    - dev
+
+  owner: "data-engineering"
+  sla_hours: 24

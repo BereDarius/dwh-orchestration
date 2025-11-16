@@ -1,0 +1,94 @@
+# YouTube to Databricks Pipeline Configuration (Production)
+pipeline:
+  name: youtube_to_databricks
+  description: "Ingest YouTube channel and video data into Databricks"
+  environment: prod
+
+  source:
+    config_file: "sources/youtube_api.yaml"
+    resources:
+      - channel_stats
+      - videos
+    params:
+      channel_id: "UCqj7Cz7revf5maW9g5pgNcg"
+      max_videos: 1000
+
+  destination:
+    config_file: "destinations/databricks.yaml"
+    dataset_name: "youtube_analytics"
+
+  schedule:
+    enabled: true
+    cron: "0 */2 * * *" # Every 2 hours in production
+    timezone: "UTC"
+    catchup: false
+    max_active_runs: 1
+
+  execution:
+    parallelism: 8
+    timeout: 10800 # 3 hours
+    retries: 5
+    retry_delay: 900 # 15 minutes
+
+    max_memory_mb: 8192
+    max_cpu_cores: 8
+
+  transformations:
+    enabled: false
+
+  data_quality:
+    enabled: true
+    fail_on_error: true
+
+    checks:
+      - name: freshness_check
+        type: freshness
+        column: "_extracted_at"
+        max_age_hours: 4
+        severity: critical
+
+      - name: completeness_check
+        type: completeness
+        required_columns: ["id", "title", "published_at"]
+        severity: critical
+
+      - name: volume_check
+        type: volume
+        min_rows: 1
+        max_rows: 50000000
+        severity: warning
+
+      - name: schema_check
+        type: schema
+        enforce_schema: true
+        severity: critical
+
+  monitoring:
+    enabled: true
+    metrics:
+      - rows_processed
+      - execution_time
+      - error_count
+      - data_quality_score
+      - api_rate_limit_usage
+
+  alerts:
+    enabled: true
+    channels:
+      - type: email
+        recipients: ["data-engineering@example.com", "oncall@example.com"]
+      - type: slack
+        webhook_secret_key: "SLACK_WEBHOOK_PROD"
+    on_failure: true
+    on_success: false
+    on_sla_miss: true
+
+  tags:
+    - youtube
+    - social_media
+    - analytics
+    - prod
+    - critical
+
+  owner: "data-engineering"
+  sla_hours: 4

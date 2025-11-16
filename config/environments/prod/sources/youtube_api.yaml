@@ -1,0 +1,137 @@
+# YouTube Analytics API Source Configuration (Production)
+source:
+  name: youtube_analytics
+  type: rest_api
+  description: "YouTube Analytics API for channel statistics and video data"
+  environment: prod
+
+  connection:
+    base_url: "https://www.googleapis.com/youtube/v3"
+    auth:
+      type: oauth2
+      credentials_secret_key: "YOUTUBE_API_KEY_PROD"
+    timeout: 120
+    retry:
+      max_attempts: 7
+      backoff_factor: 3
+      backoff_max: 300
+
+  resources:
+    - name: channel_stats
+      description: "Channel statistics including subscribers, views, and video count"
+      endpoint: "/channels"
+      method: GET
+      params:
+        part: "statistics,snippet,contentDetails"
+        id: "{channel_id}"
+
+      incremental:
+        enabled: true
+        strategy: "append"
+        cursor_field: "snippet.publishedAt"
+        initial_value: "2024-01-01T00:00:00Z"
+
+      primary_key: ["id"]
+      write_disposition: "merge"
+
+      schema:
+        columns:
+          - name: id
+            data_type: string
+            nullable: false
+          - name: title
+            data_type: string
+            nullable: false
+          - name: description
+            data_type: string
+            nullable: true
+          - name: subscriber_count
+            data_type: integer
+            nullable: true
+          - name: view_count
+            data_type: integer
+            nullable: true
+          - name: video_count
+            data_type: integer
+            nullable: true
+          - name: published_at
+            data_type: timestamp
+            nullable: false
+          - name: _extracted_at
+            data_type: timestamp
+            nullable: false
+
+      data_quality:
+        checks:
+          - type: not_null
+            columns: [id, title, published_at]
+          - type: positive
+            columns: [subscriber_count, view_count, video_count]
+          - type: unique
+            columns: [id]
+
+      pii_fields: []
+      aliases:
+        subscriber_count: total_subscribers
+        view_count: total_views
+        video_count: total_videos
+
+    - name: videos
+      description: "Video details and statistics"
+      endpoint: "/videos"
+      method: GET
+      params:
+        part: "snippet,statistics,contentDetails"
+        id: "{video_ids}"
+        maxResults: 50
+
+      incremental:
+        enabled: true
+        strategy: "merge"
+        cursor_field: "snippet.publishedAt"
+        initial_value: "2024-01-01T00:00:00Z"
+
+      primary_key: ["id"]
+      write_disposition: "merge"
+
+      schema:
+        columns:
+          - name: id
+            data_type: string
+            nullable: false
+          - name: channel_id
+            data_type: string
+            nullable: false
+          - name: title
+            data_type: string
+            nullable: false
+          - name: description
+            data_type: string
+            nullable: true
+          - name: published_at
+            data_type: timestamp
+            nullable: false
+          - name: view_count
+            data_type: integer
+            nullable: true
+          - name: like_count
+            data_type: integer
+            nullable: true
+          - name: comment_count
+            data_type: integer
+            nullable: true
+          - name: duration
+            data_type: string
+            nullable: true
+          - name: _extracted_at
+            data_type: timestamp
+            nullable: false
+
+      data_quality:
+        checks:
+          - type: not_null
+            columns: [id, channel_id, title, published_at]
+          - type: unique
+            columns: [id]
+
+      pii_fields: []

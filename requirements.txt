@@ -1,0 +1,10 @@
+# Core dependencies
+dlt[databricks]>=1.15.0
+pydantic>=2.0.0
+PyYAML>=6.0
+python-dotenv>=1.0.0
+click>=8.1.0
+rich>=13.0.0
+sqlalchemy>=2.0.0
+great-expectations>=0.18.0
+tenacity>=8.2.0

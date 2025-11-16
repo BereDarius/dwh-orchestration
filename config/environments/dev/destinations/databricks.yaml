@@ -1,0 +1,54 @@
+# Databricks Destination Configuration (Development)
+destination:
+  name: databricks_dev
+  type: databricks
+  description: "Databricks development environment"
+  environment: dev
+
+  connection:
+    # These values map to GitHub Secrets
+    server_hostname_secret_key: "DATABRICKS_HOST_DEV"
+    http_path_secret_key: "DATABRICKS_HTTP_PATH_DEV"
+    access_token_secret_key: "DATABRICKS_TOKEN_DEV"
+
+    catalog: "dev_catalog"
+    schema: "raw_data"
+
+    # Connection settings
+    session_configuration:
+      "spark.databricks.delta.optimizeWrite.enabled": "true"
+      "spark.databricks.delta.autoCompact.enabled": "true"
+
+    timeout: 300
+    retry:
+      max_attempts: 3
+      backoff_factor: 2
+
+  settings:
+    # Table settings
+    table_format: "delta"
+    partition_by: ["_extracted_at"]
+    cluster_by: []
+
+    # Write settings
+    write_mode: "append" # append, overwrite, merge
+    optimize_after_write: true
+    vacuum_after_write: false # Don't vacuum in dev
+
+    # Schema settings
+    schema_evolution: true
+    case_sensitive: false
+
+    # Performance settings
+    max_parallel_loads: 4
+    batch_size: 10000
+
+  naming:
+    # Naming conventions
+    prefix: "raw_"
+    suffix: ""
+    case: "snake_case" # snake_case, camel_case, pascal_case
+
+  data_retention:
+    enabled: false # Disabled in dev
+    days: 7

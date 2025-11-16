@@ -1,0 +1,200 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "Data Ingestion Framework"
+    }
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.analysis.typeCheckingMode": "strict",
+    "python.analysis.autoImportCompletions": true,
+
+    "[python]": {
+      "editor.defaultFormatter": "ms-python.black-formatter",
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+      }
+    },
+
+    "black-formatter.args": ["--line-length", "100"],
+
+    "ruff.configurationPreference": "filesystemFirst",
+    "ruff.lint.enable": true,
+
+    "[yaml]": {
+      "editor.defaultFormatter": "redhat.vscode-yaml",
+      "editor.formatOnSave": true,
+      "editor.insertSpaces": true,
+      "editor.tabSize": 2
+    },
+    "yaml.schemas": {
+      ".vscode/schemas/source-schema.json": "config/**/sources/*.yaml",
+      ".vscode/schemas/destination-schema.json": "config/**/destinations/*.yaml",
+      ".vscode/schemas/pipeline-schema.json": "config/**/pipelines/*.yaml"
+    },
+
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+      "tests",
+      "-v",
+      "--cov=src",
+      "--cov-report=html",
+      "--cov-report=term"
+    ],
+
+    "coverage-gutters.coverageFileNames": [
+      "coverage.xml",
+      "htmlcov/index.html"
+    ],
+
+    "editor.rulers": [100],
+    "editor.renderWhitespace": "boundary",
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      "**/.pytest_cache": true,
+      "**/.mypy_cache": true,
+      "**/.ruff_cache": true,
+      "**/htmlcov": true,
+      "**/.coverage": true
+    },
+
+    "git.enableSmartCommit": true,
+    "git.autofetch": true,
+
+    "docker.languageserver.formatter.ignoreMultilineInstructions": true
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-python.black-formatter",
+      "charliermarsh.ruff",
+      "redhat.vscode-yaml",
+      "ms-azuretools.vscode-docker",
+      "eamodio.gitlens",
+      "aaron-bond.better-comments",
+      "usernamehw.errorlens",
+      "christian-kohler.path-intellisense",
+      "gruntfuggly.todo-tree",
+      "ryanluker.vscode-coverage-gutters",
+      "ms-python.isort"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Python: Current File",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${file}",
+        "console": "integratedTerminal",
+        "justMyCode": false,
+        "env": {
+          "ENVIRONMENT": "dev"
+        }
+      },
+      {
+        "name": "Run Pipeline (Dev)",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "ingestion.cli",
+        "args": ["run", "--pipeline", "youtube_to_databricks", "--env", "dev"],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "ENVIRONMENT": "dev",
+          "PYTHONPATH": "${workspaceFolder}/src"
+        }
+      },
+      {
+        "name": "Run Tests with Coverage",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "pytest",
+        "args": [
+          "tests",
+          "-v",
+          "--cov=src",
+          "--cov-report=html",
+          "--cov-report=term"
+        ],
+        "console": "integratedTerminal",
+        "justMyCode": false
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Run Tests",
+        "type": "shell",
+        "command": "pytest tests -v",
+        "group": "test",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "panel": "new"
+        }
+      },
+      {
+        "label": "Run Tests with Coverage",
+        "type": "shell",
+        "command": "pytest tests -v --cov=src --cov-report=html --cov-report=term",
+        "group": {
+          "kind": "test",
+          "isDefault": true
+        }
+      },
+      {
+        "label": "Format Code",
+        "type": "shell",
+        "command": "black src tests && isort src tests",
+        "group": "build"
+      },
+      {
+        "label": "Lint Code",
+        "type": "shell",
+        "command": "ruff check src tests",
+        "group": "build"
+      },
+      {
+        "label": "Type Check",
+        "type": "shell",
+        "command": "mypy src",
+        "group": "build"
+      },
+      {
+        "label": "Validate Configs",
+        "type": "shell",
+        "command": "python scripts/validate_configs.py --env ${input:environment}",
+        "group": "build"
+      },
+      {
+        "label": "Switch Environment",
+        "type": "shell",
+        "command": "./scripts/switch_env.sh ${input:environment}",
+        "group": "build"
+      }
+    ],
+    "inputs": [
+      {
+        "id": "environment",
+        "type": "pickString",
+        "description": "Select environment",
+        "options": ["dev", "stage", "prod"],
+        "default": "dev"
+      }
+    ]
+  }
+}
