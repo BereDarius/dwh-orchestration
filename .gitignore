@@ -107,3 +107,4 @@ data/*.json
 tmp/
 temp/
 *.tmp
+.pids/
