@@ -1,4 +1,5 @@
 {
+  // Python Settings
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
   "python.terminal.activateEnvironment": true,
   "python.analysis.typeCheckingMode": "strict",
@@ -18,6 +19,7 @@
   "ruff.configurationPreference": "filesystemFirst",
   "ruff.lint.enable": true,
 
+  // YAML Settings
   "[yaml]": {
     "editor.defaultFormatter": "redhat.vscode-yaml",
     "editor.formatOnSave": true,
@@ -35,6 +37,9 @@
   "yaml.completion": true,
   "yaml.hover": true,
 
+  "yaml.format.singleQuote": false,
+
+  // Testing Settings
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
   "python.testing.pytestArgs": [
@@ -49,6 +54,7 @@
   "coverage-gutters.showLineCoverage": true,
   "coverage-gutters.showRulerCoverage": true,
 
+  // General Editor Settings
   "editor.rulers": [100],
   "editor.renderWhitespace": "boundary",
   "files.trimTrailingWhitespace": true,
@@ -65,9 +71,11 @@
     "**/.coverage": true
   },
 
+  // Git Settings
   "git.enableSmartCommit": true,
   "git.autofetch": true,
 
+  // TODO Tree Settings
   "todo-tree.general.tags": [
     "BUG",
     "HACK",
@@ -78,5 +86,6 @@
     "[x]"
   ],
 
+  // Error Lens Settings
   "errorLens.enabledDiagnosticLevels": ["error", "warning"]
 }
