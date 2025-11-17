@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Data Source Configuration",
+  "description": "Configuration schema for data sources",
+  "type": "object",
+  "required": [
+    "source"
+  ],
+  "properties": {
+    "source": {
+      "type": "object",
+      "required": [
+        "name",
+        "type",
+        "environment",
+        "connection",
+        "resources"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique name for this source"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "rest_api",
+            "database",
+            "file",
+            "stream"
+          ],
+          "description": "Type of data source"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "dev",
+            "stage",
+            "prod"
+          ],
+          "description": "Environment for this configuration"
+        },
+        "connection": {
+          "type": "object",
+          "description": "Connection configuration",
+          "properties": {
+            "base_url": {
+              "type": "string",
+              "description": "Base URL for REST API sources"
+            },
+            "auth": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "bearer",
+                    "api_key",
+                    "basic",
+                    "oauth2"
+                  ],
+                  "description": "Authentication type"
+                },
+                "credentials_secret_key": {
+                  "type": "string",
+                  "description": "Secret key for credentials (must end with _secret_key)"
+                },
+                "username_secret_key": {
+                  "type": "string",
+                  "description": "Secret key for username (for basic auth)"
+                },
+                "password_secret_key": {
+                  "type": "string",
+                  "description": "Secret key for password (for basic auth)"
+                }
+              }
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Request timeout in seconds",
+              "default": 30
+            },
+            "retry": {
+              "type": "object",
+              "properties": {
+                "max_attempts": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 10,
+                  "default": 3
+                },
+                "backoff_factor": {
+                  "type": "number",
+                  "minimum": 1,
+                  "default": 2
+                }
+              }
+            }
+          }
+        },
+        "resources": {
+          "type": "array",
+          "description": "List of resources to extract from this source",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "endpoint"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Resource name"
+              },
+              "endpoint": {
+                "type": "string",
+                "description": "API endpoint path"
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST"
+                ],
+                "default": "GET"
+              },
+              "params": {
+                "type": "object",
+                "description": "Query parameters"
+              },
+              "incremental": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "cursor_field": {
+                    "type": "string",
+                    "description": "Field to use for incremental loading"
+                  },
+                  "initial_value": {
+                    "type": "string",
+                    "description": "Initial cursor value"
+                  }
+                }
+              },
+              "primary_key": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Primary key fields"
+              },
+              "write_disposition": {
+                "type": "string",
+                "enum": [
+                  "append",
+                  "replace",
+                  "merge"
+                ],
+                "default": "append"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

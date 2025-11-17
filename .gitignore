@@ -48,7 +48,14 @@ dmypy.json
 .ruff_cache/
 
 # IDEs
-.vscode/
+.vscode/*
+!.vscode/schemas/
+!.vscode/schemas/*.json
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/QUICKREF.md
 .idea/
 *.swp
 *.swo

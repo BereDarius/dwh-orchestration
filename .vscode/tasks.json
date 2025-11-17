@@ -1,0 +1,109 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Tests",
+      "type": "shell",
+      "command": "source venv/bin/activate && pytest tests -v",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Tests with Coverage",
+      "type": "shell",
+      "command": "source venv/bin/activate && pytest tests -v --cov=src --cov-report=html --cov-report=term",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Format Code",
+      "type": "shell",
+      "command": "source venv/bin/activate && black src tests && isort src tests",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Lint Code",
+      "type": "shell",
+      "command": "source venv/bin/activate && ruff check src tests",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Type Check",
+      "type": "shell",
+      "command": "source venv/bin/activate && mypy src",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Validate Configs",
+      "type": "shell",
+      "command": "source venv/bin/activate && python scripts/validate_configs.py --env ${input:environment}",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "List All Configs",
+      "type": "shell",
+      "command": "source venv/bin/activate && python scripts/list_configs.py --env ${input:environment}",
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "Discover Configs (CLI)",
+      "type": "shell",
+      "command": "source venv/bin/activate && python -m ingestion.cli discover --env ${input:environment}",
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "Switch Environment",
+      "type": "shell",
+      "command": "./scripts/switch_env.sh ${input:environment}",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Quickstart",
+      "type": "shell",
+      "command": "source venv/bin/activate && python quickstart.py",
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Setup Project",
+      "type": "shell",
+      "command": "./scripts/setup.sh",
+      "group": "none",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "environment",
+      "type": "pickString",
+      "description": "Select environment",
+      "options": ["dev", "stage", "prod"],
+      "default": "dev"
+    }
+  ]
+}

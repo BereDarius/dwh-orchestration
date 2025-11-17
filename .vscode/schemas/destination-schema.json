@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Data Destination Configuration",
+  "description": "Configuration schema for data destinations",
+  "type": "object",
+  "required": [
+    "destination"
+  ],
+  "properties": {
+    "destination": {
+      "type": "object",
+      "required": [
+        "name",
+        "type",
+        "environment",
+        "connection"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique name for this destination"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "databricks",
+            "snowflake",
+            "bigquery",
+            "postgres",
+            "duckdb"
+          ],
+          "description": "Type of destination"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "dev",
+            "stage",
+            "prod"
+          ],
+          "description": "Environment for this configuration"
+        },
+        "connection": {
+          "type": "object",
+          "description": "Connection configuration",
+          "properties": {
+            "server_hostname_secret_key": {
+              "type": "string",
+              "description": "Secret key for Databricks server hostname"
+            },
+            "http_path_secret_key": {
+              "type": "string",
+              "description": "Secret key for Databricks HTTP path"
+            },
+            "access_token_secret_key": {
+              "type": "string",
+              "description": "Secret key for Databricks access token"
+            },
+            "catalog": {
+              "type": "string",
+              "description": "Databricks catalog name"
+            },
+            "schema": {
+              "type": "string",
+              "description": "Database schema name"
+            }
+          }
+        },
+        "settings": {
+          "type": "object",
+          "description": "Destination-specific settings",
+          "properties": {
+            "table_format": {
+              "type": "string",
+              "enum": [
+                "delta",
+                "parquet",
+                "iceberg"
+              ],
+              "default": "delta"
+            },
+            "optimize_after_write": {
+              "type": "boolean",
+              "default": true
+            },
+            "vacuum_after_write": {
+              "type": "boolean",
+              "default": false
+            },
+            "vacuum_retention_hours": {
+              "type": "integer",
+              "minimum": 168,
+              "default": 168
+            },
+            "merge_parallelism": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 8
+            }
+          }
+        }
+      }
+    }
+  }
+}
