@@ -78,6 +78,5 @@
     "[x]"
   ],
 
-  "errorLens.enabledDiagnosticLevels": ["error", "warning"],
-  "postman.settings.dotenv-detection-notification-visibility": false
+  "errorLens.enabledDiagnosticLevels": ["error", "warning"]
 }
