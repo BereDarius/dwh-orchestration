@@ -173,7 +173,7 @@ class DestinationConnectionConfig(BaseModel):
     """Destination connection configuration."""
 
     # DuckDB fields
-    database: str | None = None
+    file_path: str | None = None
 
     # Databricks fields
     server_hostname_secret_key: str | None = None

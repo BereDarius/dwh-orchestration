@@ -7,11 +7,7 @@ destination:
 
   connection:
     # Database file path (relative to project root)
-    database: "data/local.duckdb"
-
-    # Connection settings
-    read_only: false
-    timeout: 300
+    file_path: "data/local_github_mock_data.duckdb"
 
   settings:
     # Table settings

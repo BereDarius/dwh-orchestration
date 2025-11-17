@@ -58,11 +58,11 @@ class PipelineFactory:
 
         if (
             destination_config.type.value == "duckdb"
-            and destination_config.connection.database is not None
+            and destination_config.connection.file_path is not None
         ):
-            # For DuckDB, pass the database path as credentials
+            # For DuckDB, pass the file_path path as credentials
             destination_ref = dlt.destinations.duckdb(
-                credentials=os.path.join(os.getcwd(), destination_config.connection.database)
+                credentials=os.path.join(os.getcwd(), destination_config.connection.file_path)
             )
 
         # Create DLT pipeline

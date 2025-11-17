@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Data Destination Configuration",
-  "description": "Configuration schema for data destinations",
+  "description": "Comprehensive configuration schema for dlt data destinations with conditional validation based on destination type",
   "type": "object",
   "required": [
     "destination"
@@ -27,7 +27,20 @@
             "snowflake",
             "bigquery",
             "postgres",
-            "duckdb"
+            "duckdb",
+            "mssql",
+            "azuresynapse",
+            "clickhouse",
+            "redshift",
+            "athena",
+            "delta",
+            "iceberg",
+            "filesystem",
+            "weaviate",
+            "lancedb",
+            "qdrant",
+            "dremio",
+            "motherduck"
           ],
           "description": "Type of destination"
         },
@@ -42,64 +55,1629 @@
         },
         "connection": {
           "type": "object",
-          "description": "Connection configuration",
+          "description": "Connection configuration - always available properties",
           "properties": {
-            "server_hostname_secret_key": {
-              "type": "string",
-              "description": "Secret key for Databricks server hostname"
+            "timeout": {
+              "type": "integer",
+              "description": "Connection timeout in seconds",
+              "minimum": 0
             },
-            "http_path_secret_key": {
-              "type": "string",
-              "description": "Secret key for Databricks HTTP path"
-            },
-            "access_token_secret_key": {
-              "type": "string",
-              "description": "Secret key for Databricks access token"
-            },
-            "catalog": {
-              "type": "string",
-              "description": "Databricks catalog name"
-            },
-            "schema": {
-              "type": "string",
-              "description": "Database schema name"
+            "retry": {
+              "type": "object",
+              "description": "Retry policy configuration",
+              "properties": {
+                "max_attempts": {
+                  "type": "integer",
+                  "description": "Maximum number of retry attempts",
+                  "minimum": 1
+                },
+                "backoff_factor": {
+                  "type": "number",
+                  "description": "Exponential backoff factor for retries",
+                  "minimum": 0
+                },
+                "initial_delay": {
+                  "type": "number",
+                  "description": "Initial delay in seconds before first retry",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false
             }
-          }
+          },
+          "additionalProperties": true
         },
         "settings": {
           "type": "object",
-          "description": "Destination-specific settings",
-          "properties": {
-            "table_format": {
-              "type": "string",
-              "enum": [
-                "delta",
-                "parquet",
-                "iceberg"
-              ],
-              "default": "delta"
-            },
-            "optimize_after_write": {
-              "type": "boolean",
-              "default": true
-            },
-            "vacuum_after_write": {
-              "type": "boolean",
-              "default": false
-            },
-            "vacuum_retention_hours": {
-              "type": "integer",
-              "minimum": 168,
-              "default": 168
-            },
-            "merge_parallelism": {
-              "type": "integer",
-              "minimum": 1,
-              "default": 8
+          "description": "Destination-specific settings"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "databricks"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "server_hostname_secret_key": {
+                    "type": "string",
+                    "description": "Secret key for Databricks server hostname"
+                  },
+                  "http_path_secret_key": {
+                    "type": "string",
+                    "description": "Secret key for Databricks HTTP path"
+                  },
+                  "access_token_secret_key": {
+                    "type": "string",
+                    "description": "Secret key for Databricks access token"
+                  },
+                  "catalog": {
+                    "type": "string",
+                    "description": "Databricks catalog name"
+                  },
+                  "schema": {
+                    "type": "string",
+                    "description": "Database schema name"
+                  },
+                  "session_configuration": {
+                    "type": "object",
+                    "description": "Databricks session configuration"
+                  },
+                  "timeout": {
+                    "type": "integer",
+                    "description": "Connection timeout in seconds"
+                  },
+                  "retry": {
+                    "type": "object",
+                    "description": "Retry policy configuration"
+                  }
+                },
+                "required": [
+                  "server_hostname_secret_key",
+                  "http_path_secret_key",
+                  "access_token_secret_key",
+                  "catalog",
+                  "schema",
+                  "session_configuration",
+                  "timeout",
+                  "retry"
+                ],
+                "additionalProperties": false
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "naming_convention": {
+                    "type": "string",
+                    "enum": [
+                      "snake_case",
+                      "sql_ci_v1",
+                      "sql_cs_v1"
+                    ],
+                    "default": "snake_case",
+                    "description": "Naming convention for identifiers"
+                  },
+                  "keep_staged_files": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Keep or delete staged files after loading"
+                  },
+                  "is_staging_external_location": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Use external location for staging"
+                  },
+                  "staging_credentials_name": {
+                    "type": "string",
+                    "description": "Name of stored credentials for staging"
+                  },
+                  "table_format": {
+                    "type": "string",
+                    "enum": [
+                      "delta",
+                      "iceberg"
+                    ],
+                    "default": "delta",
+                    "description": "Table format for storage"
+                  },
+                  "optimize_after_write": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Optimize table after write operation"
+                  },
+                  "vacuum_after_write": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Run vacuum after write operation"
+                  },
+                  "vacuum_retention_hours": {
+                    "type": "integer",
+                    "minimum": 168,
+                    "default": 168,
+                    "description": "Retention hours for vacuum operation"
+                  },
+                  "merge_parallelism": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 8,
+                    "description": "Parallelism level for merge operations"
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  },
+                  "batch_size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Batch size for data loading"
+                  },
+                  "schema_evolution": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable schema evolution"
+                  },
+                  "case_sensitive": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable case-sensitive identifiers"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "snowflake"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "account": {
+                    "type": "string",
+                    "description": "Snowflake account identifier"
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "Snowflake user"
+                  },
+                  "password_secret_key": {
+                    "type": "string",
+                    "description": "Secret key for Snowflake password"
+                  },
+                  "database": {
+                    "type": "string",
+                    "description": "Snowflake database name"
+                  },
+                  "schema": {
+                    "type": "string",
+                    "description": "Snowflake schema name"
+                  },
+                  "warehouse": {
+                    "type": "string",
+                    "description": "Snowflake warehouse name"
+                  },
+                  "role": {
+                    "type": "string",
+                    "description": "Snowflake role"
+                  },
+                  "timeout": {
+                    "type": "integer",
+                    "description": "Connection timeout in seconds"
+                  },
+                  "retry": {
+                    "type": "object",
+                    "description": "Retry policy configuration"
+                  }
+                },
+                "required": [
+                  "account",
+                  "user",
+                  "password_secret_key",
+                  "database",
+                  "schema",
+                  "timeout",
+                  "retry"
+                ],
+                "additionalProperties": false
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "naming_convention": {
+                    "type": "string",
+                    "enum": [
+                      "snake_case",
+                      "sql_ci_v1",
+                      "sql_cs_v1"
+                    ],
+                    "default": "sql_ci_v1",
+                    "description": "Naming convention for identifiers (sql_ci_v1 = case-insensitive)"
+                  },
+                  "keep_staged_files": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Keep or delete staged files after loading"
+                  },
+                  "stage_name": {
+                    "type": "string",
+                    "description": "Use an existing named stage instead of default"
+                  },
+                  "query_tag": {
+                    "type": "string",
+                    "description": "Tag sessions executing jobs with placeholders like {source}, {table}"
+                  },
+                  "create_indexes": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Create UNIQUE or PRIMARY KEY constraints"
+                  },
+                  "use_vectorized_scanner": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable vectorized scanner for NULL value handling"
+                  },
+                  "statement_timeout_in_seconds": {
+                    "type": "integer",
+                    "description": "Statement execution timeout in seconds",
+                    "minimum": 0
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  },
+                  "batch_size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Batch size for data loading"
+                  },
+                  "schema_evolution": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable schema evolution"
+                  },
+                  "case_sensitive": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable case-sensitive identifiers"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "bigquery"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "project_id": {
+                    "type": "string",
+                    "description": "GCP project ID"
+                  },
+                  "dataset": {
+                    "type": "string",
+                    "description": "BigQuery dataset name"
+                  },
+                  "timeout": {
+                    "type": "integer",
+                    "description": "Connection timeout in seconds"
+                  },
+                  "retry": {
+                    "type": "object",
+                    "description": "Retry policy configuration"
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "dataset",
+                  "timeout",
+                  "retry"
+                ],
+                "additionalProperties": false
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "naming_convention": {
+                    "type": "string",
+                    "enum": [
+                      "snake_case",
+                      "sql_ci_v1",
+                      "sql_cs_v1"
+                    ],
+                    "default": "snake_case",
+                    "description": "Naming convention for identifiers"
+                  },
+                  "location": {
+                    "type": "string",
+                    "description": "BigQuery dataset location (e.g., US, EU)"
+                  },
+                  "partition_expiration_ms": {
+                    "type": "integer",
+                    "description": "Partition expiration time in milliseconds",
+                    "minimum": 0
+                  },
+                  "partition_by": {
+                    "type": "string",
+                    "description": "Column to partition by"
+                  },
+                  "cluster_by": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Columns to cluster by"
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  },
+                  "batch_size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Batch size for data loading"
+                  },
+                  "schema_evolution": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable schema evolution"
+                  },
+                  "case_sensitive": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable case-sensitive identifiers"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "postgres"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "PostgreSQL host address"
+                  },
+                  "port": {
+                    "type": "integer",
+                    "description": "PostgreSQL port",
+                    "minimum": 1,
+                    "maximum": 65535
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "PostgreSQL user"
+                  },
+                  "password_secret_key": {
+                    "type": "string",
+                    "description": "Secret key for PostgreSQL password"
+                  },
+                  "database": {
+                    "type": "string",
+                    "description": "PostgreSQL database name"
+                  },
+                  "schema": {
+                    "type": "string",
+                    "description": "PostgreSQL schema name"
+                  },
+                  "timeout": {
+                    "type": "integer",
+                    "description": "Connection timeout in seconds"
+                  }
+                },
+                "required": [
+                  "host",
+                  "port",
+                  "user",
+                  "password_secret_key",
+                  "database",
+                  "schema",
+                  "timeout"
+                ],
+                "additionalProperties": false
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "naming_convention": {
+                    "type": "string",
+                    "enum": [
+                      "snake_case",
+                      "sql_ci_v1",
+                      "sql_cs_v1"
+                    ],
+                    "default": "snake_case",
+                    "description": "Naming convention for identifiers"
+                  },
+                  "sslmode": {
+                    "type": "string",
+                    "enum": [
+                      "disable",
+                      "allow",
+                      "prefer",
+                      "require",
+                      "verify-ca",
+                      "verify-full"
+                    ],
+                    "default": "prefer",
+                    "description": "SSL mode for database connection"
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  },
+                  "batch_size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Batch size for data loading"
+                  },
+                  "schema_evolution": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable schema evolution"
+                  },
+                  "case_sensitive": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable case-sensitive identifiers"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "duckdb"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "file_path": {
+                    "type": "string",
+                    "description": "Path to DuckDB database file or ':memory:' for in-memory database"
+                  }
+                },
+                "required": [
+                  "file_path"
+                ],
+                "additionalProperties": false
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "naming_convention": {
+                    "type": "string",
+                    "enum": [
+                      "snake_case",
+                      "sql_ci_v1",
+                      "sql_cs_v1"
+                    ],
+                    "default": "snake_case",
+                    "description": "Naming convention for identifiers"
+                  },
+                  "recommended_file_size": {
+                    "type": "integer",
+                    "description": "Recommended file size for database",
+                    "minimum": 1048576
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  },
+                  "batch_size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Batch size for data loading"
+                  },
+                  "schema_evolution": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable schema evolution"
+                  },
+                  "case_sensitive": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable case-sensitive identifiers"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "mssql"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "MSSQL server host address"
+                  },
+                  "port": {
+                    "type": "integer",
+                    "description": "MSSQL server port",
+                    "minimum": 1,
+                    "maximum": 65535
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "MSSQL user"
+                  },
+                  "password_secret_key": {
+                    "type": "string",
+                    "description": "Secret key for MSSQL password"
+                  },
+                  "database": {
+                    "type": "string",
+                    "description": "MSSQL database name"
+                  },
+                  "timeout": {
+                    "type": "integer",
+                    "description": "Connection timeout in seconds"
+                  }
+                },
+                "required": [
+                  "host",
+                  "port",
+                  "user",
+                  "password_secret_key",
+                  "database",
+                  "timeout"
+                ],
+                "additionalProperties": false
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "naming_convention": {
+                    "type": "string",
+                    "enum": [
+                      "snake_case",
+                      "sql_ci_v1",
+                      "sql_cs_v1"
+                    ],
+                    "default": "snake_case",
+                    "description": "Naming convention for identifiers"
+                  },
+                  "has_case_sensitive_identifiers": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable case-sensitive identifier support"
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  },
+                  "batch_size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Batch size for data loading"
+                  },
+                  "schema_evolution": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable schema evolution"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "azuresynapse"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "server_hostname_secret_key": {
+                    "type": "string",
+                    "description": "Secret key for Azure Synapse server hostname"
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "Azure Synapse user"
+                  },
+                  "password_secret_key": {
+                    "type": "string",
+                    "description": "Secret key for Azure Synapse password"
+                  },
+                  "database": {
+                    "type": "string",
+                    "description": "Azure Synapse database name"
+                  },
+                  "timeout": {
+                    "type": "integer",
+                    "description": "Connection timeout in seconds"
+                  }
+                },
+                "required": [
+                  "server_hostname_secret_key",
+                  "user",
+                  "password_secret_key",
+                  "database",
+                  "timeout"
+                ],
+                "additionalProperties": false
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "naming_convention": {
+                    "type": "string",
+                    "enum": [
+                      "snake_case",
+                      "sql_ci_v1",
+                      "sql_cs_v1"
+                    ],
+                    "default": "snake_case",
+                    "description": "Naming convention for identifiers"
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  },
+                  "batch_size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Batch size for data loading"
+                  },
+                  "schema_evolution": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable schema evolution"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "clickhouse"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "ClickHouse host address"
+                  },
+                  "port": {
+                    "type": "integer",
+                    "description": "ClickHouse port",
+                    "minimum": 1,
+                    "maximum": 65535
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "ClickHouse user"
+                  },
+                  "password_secret_key": {
+                    "type": "string",
+                    "description": "Secret key for ClickHouse password"
+                  },
+                  "database": {
+                    "type": "string",
+                    "description": "ClickHouse database name"
+                  },
+                  "timeout": {
+                    "type": "integer",
+                    "description": "Connection timeout in seconds"
+                  }
+                },
+                "required": [
+                  "host",
+                  "port",
+                  "user",
+                  "password_secret_key",
+                  "database",
+                  "timeout"
+                ],
+                "additionalProperties": false
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "naming_convention": {
+                    "type": "string",
+                    "enum": [
+                      "snake_case",
+                      "sql_ci_v1",
+                      "sql_cs_v1"
+                    ],
+                    "default": "snake_case",
+                    "description": "Naming convention for identifiers"
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  },
+                  "batch_size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Batch size for data loading"
+                  },
+                  "schema_evolution": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable schema evolution"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "redshift"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "Redshift cluster host address"
+                  },
+                  "port": {
+                    "type": "integer",
+                    "description": "Redshift cluster port",
+                    "minimum": 1,
+                    "maximum": 65535
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "Redshift user"
+                  },
+                  "password_secret_key": {
+                    "type": "string",
+                    "description": "Secret key for Redshift password"
+                  },
+                  "database": {
+                    "type": "string",
+                    "description": "Redshift database name"
+                  },
+                  "timeout": {
+                    "type": "integer",
+                    "description": "Connection timeout in seconds"
+                  }
+                },
+                "required": [
+                  "host",
+                  "port",
+                  "user",
+                  "password_secret_key",
+                  "database",
+                  "timeout"
+                ],
+                "additionalProperties": false
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "naming_convention": {
+                    "type": "string",
+                    "enum": [
+                      "snake_case",
+                      "sql_ci_v1",
+                      "sql_cs_v1"
+                    ],
+                    "default": "snake_case",
+                    "description": "Naming convention for identifiers"
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  },
+                  "batch_size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Batch size for data loading"
+                  },
+                  "schema_evolution": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable schema evolution"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "athena"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "region": {
+                    "type": "string",
+                    "description": "AWS region for Athena"
+                  },
+                  "access_key_id": {
+                    "type": "string",
+                    "description": "AWS access key ID"
+                  },
+                  "secret_access_key": {
+                    "type": "string",
+                    "description": "AWS secret access key"
+                  },
+                  "catalog": {
+                    "type": "string",
+                    "description": "Athena catalog name"
+                  },
+                  "database": {
+                    "type": "string",
+                    "description": "Athena database name"
+                  }
+                },
+                "required": [
+                  "region",
+                  "access_key_id",
+                  "secret_access_key",
+                  "catalog",
+                  "database"
+                ],
+                "additionalProperties": false
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "naming_convention": {
+                    "type": "string",
+                    "enum": [
+                      "snake_case",
+                      "sql_ci_v1",
+                      "sql_cs_v1"
+                    ],
+                    "default": "snake_case",
+                    "description": "Naming convention for identifiers"
+                  },
+                  "s3_output_path": {
+                    "type": "string",
+                    "description": "S3 path for Athena query results"
+                  },
+                  "database_location": {
+                    "type": "string",
+                    "description": "S3 location for Athena database"
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  },
+                  "batch_size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Batch size for data loading"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "delta"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": true
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "naming_convention": {
+                    "type": "string",
+                    "enum": [
+                      "snake_case",
+                      "sql_ci_v1",
+                      "sql_cs_v1"
+                    ],
+                    "default": "snake_case",
+                    "description": "Naming convention for identifiers"
+                  },
+                  "table_format": {
+                    "type": "string",
+                    "enum": [
+                      "delta",
+                      "iceberg"
+                    ],
+                    "default": "delta",
+                    "description": "Delta table format"
+                  },
+                  "optimize_after_write": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Optimize table after write"
+                  },
+                  "vacuum_after_write": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Vacuum table after write"
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  },
+                  "batch_size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Batch size for data loading"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "iceberg"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": true
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "naming_convention": {
+                    "type": "string",
+                    "enum": [
+                      "snake_case",
+                      "sql_ci_v1",
+                      "sql_cs_v1"
+                    ],
+                    "default": "snake_case",
+                    "description": "Naming convention for identifiers"
+                  },
+                  "catalog_type": {
+                    "type": "string",
+                    "enum": [
+                      "hive",
+                      "glue",
+                      "rest"
+                    ],
+                    "description": "Iceberg catalog type"
+                  },
+                  "partition_by": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Columns to partition by"
+                  },
+                  "cluster_by": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Columns to cluster by"
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  },
+                  "batch_size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Batch size for data loading"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "filesystem"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "file_path": {
+                    "type": "string",
+                    "description": "File system path for storage (local, S3, GCS, Azure Blob Storage)"
+                  }
+                },
+                "required": [
+                  "file_path"
+                ],
+                "additionalProperties": false
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "naming_convention": {
+                    "type": "string",
+                    "enum": [
+                      "snake_case",
+                      "sql_ci_v1",
+                      "sql_cs_v1"
+                    ],
+                    "default": "snake_case",
+                    "description": "Naming convention for identifiers"
+                  },
+                  "layout": {
+                    "type": "string",
+                    "description": "File layout pattern with placeholders like {table_name}, {owner}, {load_id}"
+                  },
+                  "file_format": {
+                    "type": "string",
+                    "enum": [
+                      "jsonl",
+                      "parquet",
+                      "csv"
+                    ],
+                    "default": "parquet",
+                    "description": "File format for storage"
+                  },
+                  "partition_by": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Columns to partition by"
+                  },
+                  "cluster_by": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Columns to cluster by"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "weaviate"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "Weaviate server host address"
+                  },
+                  "port": {
+                    "type": "integer",
+                    "description": "Weaviate server port",
+                    "minimum": 1,
+                    "maximum": 65535
+                  }
+                },
+                "required": [
+                  "host",
+                  "port"
+                ],
+                "additionalProperties": false
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "batch_size": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Batch size for vector insertion",
+                    "minimum": 1
+                  },
+                  "naming_convention": {
+                    "type": "string",
+                    "default": "direct",
+                    "description": "Naming convention for class names"
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "lancedb"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "file_path": {
+                    "type": "string",
+                    "description": "Path to LanceDB database directory"
+                  }
+                },
+                "required": [
+                  "file_path"
+                ],
+                "additionalProperties": false
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "naming_convention": {
+                    "type": "string",
+                    "enum": [
+                      "snake_case",
+                      "sql_ci_v1",
+                      "sql_cs_v1"
+                    ],
+                    "default": "snake_case",
+                    "description": "Naming convention for identifiers"
+                  },
+                  "batch_size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Batch size for data loading"
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "qdrant"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "Qdrant server host address"
+                  },
+                  "port": {
+                    "type": "integer",
+                    "description": "Qdrant server port",
+                    "minimum": 1,
+                    "maximum": 65535
+                  }
+                },
+                "required": [
+                  "host",
+                  "port"
+                ],
+                "additionalProperties": false
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "batch_size": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Batch size for point insertion",
+                    "minimum": 1
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "dremio"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "Dremio server host address"
+                  },
+                  "port": {
+                    "type": "integer",
+                    "description": "Dremio server port",
+                    "minimum": 1,
+                    "maximum": 65535
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "Dremio user"
+                  },
+                  "password_secret_key": {
+                    "type": "string",
+                    "description": "Secret key for Dremio password"
+                  },
+                  "database": {
+                    "type": "string",
+                    "description": "Dremio database/space name"
+                  }
+                },
+                "required": [
+                  "host",
+                  "port",
+                  "user",
+                  "password_secret_key",
+                  "database"
+                ],
+                "additionalProperties": false
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "naming_convention": {
+                    "type": "string",
+                    "enum": [
+                      "snake_case",
+                      "sql_ci_v1",
+                      "sql_cs_v1"
+                    ],
+                    "default": "snake_case",
+                    "description": "Naming convention for identifiers"
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  },
+                  "batch_size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Batch size for data loading"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "type": {
+                "const": "motherduck"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "file_path": {
+                    "type": "string",
+                    "description": "DuckDB connection string or file path for MotherDuck"
+                  }
+                },
+                "required": [
+                  "file_path"
+                ],
+                "additionalProperties": false
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "naming_convention": {
+                    "type": "string",
+                    "enum": [
+                      "snake_case",
+                      "sql_ci_v1",
+                      "sql_cs_v1"
+                    ],
+                    "default": "snake_case",
+                    "description": "Naming convention for identifiers"
+                  },
+                  "max_parallel_loads": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Maximum parallel loads"
+                  },
+                  "batch_size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Batch size for data loading"
+                  }
+                },
+                "additionalProperties": true
+              }
             }
           }
         }
       }
     }
-  }
+  ]
 }
