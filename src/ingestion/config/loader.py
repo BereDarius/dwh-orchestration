@@ -10,6 +10,7 @@ from ingestion.config.environment import get_environment_config_path
 from ingestion.config.models import (
     DestinationConfig,
     Environment,
+    JobConfig,
     PipelineConfig,
     SecretsConfig,
     SourceConfig,
@@ -342,3 +343,46 @@ class ConfigLoader:
             return []
 
         return [f.name for f in destinations_path.glob("*.yaml")]
+
+    def load_job_config(self, filename: str) -> JobConfig:
+        """
+        Load job configuration.
+
+        Args:
+            filename: Name of the job config file
+
+        Returns:
+            JobConfig: Validated job configuration
+
+        Raises:
+            ValidationError: If configuration is invalid
+        """
+        file_path = self.config_path / "jobs" / filename
+        data = self._load_yaml(file_path)
+
+        # Extract the job configuration
+        job_data = data.get("job", {})
+
+        try:
+            return JobConfig(**job_data)
+        except ValidationError as e:
+            raise ValueError(f"Invalid job configuration in {filename}: {e}") from e
+
+    def load_all_jobs(self) -> dict[str, JobConfig]:
+        """
+        Load all job configurations for the current environment.
+
+        Returns:
+            Dict mapping job names to their configurations
+        """
+        jobs_path = self.config_path / "jobs"
+
+        if not jobs_path.exists():
+            return {}
+
+        jobs: dict[str, JobConfig] = {}
+        for config_file in jobs_path.glob("*.yaml"):
+            job_config = self.load_job_config(config_file.name)
+            jobs[job_config.name] = job_config
+
+        return jobs

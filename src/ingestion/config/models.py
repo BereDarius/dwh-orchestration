@@ -164,7 +164,6 @@ class SourceConfig(BaseModel):
     name: str
     type: SourceType
     description: str | None = None
-    environment: Environment
     connection: ConnectionConfig
     resources: list[ResourceConfig]
 
@@ -223,7 +222,6 @@ class DestinationConfig(BaseModel):
     name: str
     type: DestinationType
     description: str | None = None
-    environment: Environment
     connection: DestinationConnectionConfig
     settings: DestinationSettings = Field(default_factory=DestinationSettings)
     naming: NamingConvention = Field(default_factory=NamingConvention)
@@ -302,7 +300,6 @@ class PipelineConfig(BaseModel):
 
     name: str
     description: str | None = None
-    environment: Environment
     source: PipelineSourceRef
     destination: PipelineDestinationRef
     schedule: ScheduleConfig
@@ -339,36 +336,127 @@ class SecretsConfig(BaseModel):
     validation: SecretsValidation
 
 
-class TriggerScheduleConfig(BaseModel):
-    """Trigger schedule configuration."""
+class JobPipelineConfig(BaseModel):
+    """Pipeline configuration within a job."""
 
+    name: str
+    order: int = 0
+    depends_on: list[str] = Field(default_factory=list)
+    parameters: dict[str, Any] = Field(default_factory=dict)
     enabled: bool = True
-    cron: str = "0 0 * * *"  # Daily at midnight by default
-    timezone: str = "UTC"
-
-
-class TriggerExecutionConfig(BaseModel):
-    """Trigger execution configuration."""
-
-    parallel: bool = False
     continue_on_failure: bool = False
 
 
-class TriggerRetryConfig(BaseModel):
-    """Trigger-specific retry configuration."""
+class JobExecutionConfig(BaseModel):
+    """Job execution configuration."""
 
-    max_attempts: int = Field(default=3, ge=1, le=10)
-    retry_delay_seconds: int = Field(default=60, ge=0)
+    mode: str = "dag"  # sequential, parallel, dag
+    max_parallelism: int = Field(default=5, ge=1)
+    continue_on_failure: bool = False
+    timeout: int | None = None
 
 
-class TriggerConfig(BaseModel):
-    """Pipeline trigger configuration."""
+class JobRetryConfig(BaseModel):
+    """Job retry configuration."""
+
+    max_attempts: int = Field(default=0, ge=0, le=10)
+    retry_delay: int = Field(default=60, ge=0)
+    exponential_backoff: bool = True
+    backoff_factor: float = Field(default=2.0, ge=1.0)
+    retry_on: list[str] = Field(default_factory=lambda: ["timeout", "connection_error"])
+
+
+class JobNotificationsConfig(BaseModel):
+    """Job notifications configuration."""
+
+    on_success: bool = False
+    on_failure: bool = True
+    on_retry: bool = False
+    on_sla_miss: bool = True
+    channels: list[str] = Field(default_factory=lambda: ["email"])
+    recipients: list[str] = Field(default_factory=list)
+
+
+class JobSLAConfig(BaseModel):
+    """Job SLA configuration."""
+
+    max_duration_minutes: int | None = None
+    expected_completion_time: str | None = None
+    timezone: str = "UTC"
+
+
+class JobMetadata(BaseModel):
+    """Job metadata."""
+
+    owner: str | None = None
+    version: str | None = None
+    documentation_url: str | None = None
+    runbook_url: str | None = None
+    custom: dict[str, Any] = Field(default_factory=dict)
+
+
+class JobConfig(BaseModel):
+    """Job configuration - batch of pipelines with dependencies."""
 
     name: str
     description: str | None = None
-    pipeline: str  # Pipeline name or "*" for all pipelines
-    schedule: TriggerScheduleConfig
-    parameters: dict[str, Any] = Field(default_factory=dict)
-    execution: TriggerExecutionConfig = Field(default_factory=TriggerExecutionConfig)
-    retries: TriggerRetryConfig = Field(default_factory=TriggerRetryConfig)
     tags: list[str] = Field(default_factory=list)
+    dependencies: list[str] = Field(default_factory=list)
+    pipelines: list[JobPipelineConfig]
+    execution: JobExecutionConfig = Field(default_factory=JobExecutionConfig)
+    retries: JobRetryConfig = Field(default_factory=JobRetryConfig)
+    notifications: JobNotificationsConfig = Field(default_factory=JobNotificationsConfig)
+    sla: JobSLAConfig = Field(default_factory=JobSLAConfig)
+    metadata: JobMetadata = Field(default_factory=JobMetadata)
+
+
+class TriggerScheduleConfig(BaseModel):
+    """Trigger schedule configuration."""
+
+    cron: str
+    timezone: str = "UTC"
+    catchup: bool = False
+    jitter: int = Field(default=0, ge=0)
+
+
+class TriggerIntervalConfig(BaseModel):
+    """Trigger interval configuration."""
+
+    value: int = Field(ge=1)
+    unit: str  # seconds, minutes, hours, days
+
+
+class TriggerWebhookConfig(BaseModel):
+    """Trigger webhook configuration."""
+
+    path: str
+    methods: list[str] = Field(default_factory=lambda: ["POST"])
+    authentication: dict[str, Any] | None = None
+    payload_mapping: dict[str, str] = Field(default_factory=dict)
+
+
+class TriggerEventConfig(BaseModel):
+    """Trigger event configuration."""
+
+    source: str
+    event_type: str
+    filter: dict[str, Any] | None = None
+    config: dict[str, Any] = Field(default_factory=dict)
+
+
+class TriggerConfig(BaseModel):
+    """Trigger configuration - defines when jobs run."""
+
+    name: str
+    description: str | None = None
+    type: str  # cron, interval, manual, event, webhook
+    enabled: bool = True
+    job: str  # Job configuration file reference
+    parameters: dict[str, Any] = Field(default_factory=dict)
+    tags: list[str] = Field(default_factory=list)
+
+    # Type-specific configs (only one will be used based on type)
+    schedule: TriggerScheduleConfig | None = None
+    interval: TriggerIntervalConfig | None = None
+    webhook: TriggerWebhookConfig | None = None
+    event: TriggerEventConfig | None = None

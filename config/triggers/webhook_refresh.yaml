@@ -6,7 +6,7 @@ trigger:
   enabled: true
 
   # Job to execute
-  job: daily_data_ingestion.yaml
+  job: all_pipelines_job.yaml
 
   # Webhook configuration
   webhook:

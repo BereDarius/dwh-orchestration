@@ -9,11 +9,9 @@ trigger:
   job: hourly_analytics.yaml
 
   # Interval configuration
-  schedule:
-    interval:
-      value: 15
-      unit: minutes
-    start_time: "2025-01-01T00:00:00Z" # ISO 8601 format
+  interval:
+    value: 15
+    unit: minutes
 
   # Parameters
   parameters:

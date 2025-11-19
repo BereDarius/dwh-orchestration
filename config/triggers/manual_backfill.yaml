@@ -6,7 +6,7 @@ trigger:
   enabled: true
 
   # Job to execute
-  job: daily_data_ingestion.yaml
+  job: all_pipelines_job.yaml
 
   # Manual triggers don't have schedules
   # They are executed via API or UI

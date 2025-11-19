@@ -1,146 +1,115 @@
-# Data Ingestion Framework
+# Data Warehouse Orchestration Framework
 
-A production-ready, configuration-driven data ingestion framework built on DLT (Data Load Tool) with multi-environment support (dev/stage/prod), comprehensive testing, and Airflow orchestration.
+A production-ready, **100% YAML-driven** data orchestration framework where data engineers never write Python code. Define everything through YAML configurations: sources, destinations, pipelines, jobs, and triggers. The framework automatically handles orchestration, dependencies, scheduling, and execution.
 
-## 🎯 Features
+## 🎯 Key Philosophy
 
-- **Configuration-Driven**: Define sources, destinations, and pipelines in simple YAML files
-- **Multi-Environment**: Separate configurations for dev, stage, and prod environments
-- **Secrets Management**: Secure secrets resolution from environment variables & GitHub Secrets
+**Zero Python Required for Data Engineers**
+
+- Data engineers work exclusively with YAML configuration files
+- Framework automatically discovers and orchestrates all configs
+- Dependencies resolved automatically (job-level and pipeline-level)
+- Scheduling handled through trigger definitions
+- Built on Prefect for robust orchestration
+
+## ✨ Features
+
+- **100% YAML-Driven**: No Python code needed - pure YAML configuration
+- **Auto-Discovery**: Automatically finds and loads all YAML configs
+- **Smart Dependencies**: DAG execution with automatic dependency resolution
+- **Multi-Environment**: Single config set, environment controlled via `ENVIRONMENT` variable
+- **Secure Secrets**: Automatic secret resolution from environment variables
 - **Type-Safe**: Full Pydantic validation for all configurations
-- **100% Test Coverage**: Comprehensive unit tests with pytest
-- **Dynamic DAG Generation**: Airflow DAGs automatically generated from YAML configs
-- **Incremental Loading**: Built-in support for CDC and timestamp-based incremental loads
-- **Data Quality**: Integrated data quality checks with Great Expectations
-- **VS Code Optimized**: Pre-configured workspace with auto-formatting and linting
+- **Real-time Validation**: VS Code integration with JSON schemas for instant feedback
+- **Flexible Scheduling**: Cron, interval, manual, event, and webhook triggers
+- **Job Orchestration**: Batch pipelines with sequential, parallel, or DAG execution modes
 
 ## 📁 Project Structure
 
 ```
-data-ingestion-framework/
-├── config/                      # Configuration files
-│   └── environments/            # Environment-specific configs
-│       ├── dev/                 # Development environment
-│       ├── stage/               # Staging environment
-│       └── prod/                # Production environment
-├── src/ingestion/               # Source code
+data-warehouse/
+├── config/                      # YAML configuration files (data engineers work here)
+│   ├── sources/                 # Data source definitions (3 files)
+│   ├── destinations/            # Data warehouse/lake destinations (2 files)
+│   ├── pipelines/               # ETL pipeline definitions (3 files)
+│   ├── jobs/                    # Job definitions - batches of pipelines (3 files)
+│   ├── triggers/                # Scheduling and trigger definitions (7 files)
+│   └── secrets_mapping.yaml     # Secret key mappings
+├── orchestration/               # Orchestration engine (no changes needed)
+│   └── main.py                  # Single entry point for everything
+├── src/ingestion/               # Framework code (no changes needed)
 │   ├── config/                  # Configuration management
 │   ├── sources/                 # Source implementations
 │   ├── destinations/            # Destination handlers
-│   ├── pipelines/               # Pipeline engine
-│   └── utils/                   # Utilities
-├── airflow/                     # Airflow DAGs and plugins
-├── tests/                       # Test suite (100% coverage)
-├── docker/                      # Docker configs per environment
-└── docs/                        # Documentation
+│   └── pipelines/               # Pipeline engine
+├── tests/                       # Test suite
+└── .vscode/schemas/             # JSON schemas for YAML validation
 ```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Python 3.10 or higher
-- Docker & Docker Compose (for Airflow)
-- Git
+- Python 3.13+
+- Virtual environment with dependencies installed
 
-### 1. Clone and Setup
-
-```bash
-# Clone the repository
-cd /Users/beredarius/Desktop/IT/fun/data-warehouse
-
-# Make setup script executable
-chmod +x scripts/setup.sh
-
-# Run setup
-./scripts/setup.sh
-```
-
-### 2. Configure Environment
+### 1. Setup Environment
 
 ```bash
-# Copy environment template
-cp .env.dev.example .env
+# Navigate to project
+cd data-warehouse
 
-# Edit .env and add your credentials
-nano .env
-```
-
-### 3. Install Dependencies
-
-```bash
 # Activate virtual environment
-source .venv/bin/activate
+source venv/bin/activate
 
-# Install dependencies
-pip install -r requirements-dev.txt
-
-# Install pre-commit hooks
-pre-commit install
+# Set environment (dev/stage/prod)
+export ENVIRONMENT=dev
 ```
 
-### 4. Validate Configuration
+### 2. Validate Configurations
 
 ```bash
-# Run quick start verification (checks everything)
-python quickstart.py
+# Validate all YAML configs
+python -m orchestration.main --validate
 
-# Or validate individually
-python scripts/validate_configs.py --env dev
-python scripts/validate_secrets.py --env dev
+# List all configurations
+python -m orchestration.main --list
 ```
 
-### 5. Run Example Pipeline
+### 3. Start Orchestration
 
 ```bash
-# Run the YouTube API example
-python examples/run_youtube_pipeline.py
-
-# Or use the CLI
-ingestion run --pipeline youtube_to_databricks --env dev
+# Start the orchestration system (runs continuously)
+python -m orchestration.main
 ```
 
-### 6. Open in VS Code (Recommended)
+This will:
+- Auto-discover all YAML configurations
+- Create Prefect flows for all jobs
+- Set up all triggers and schedules
+- Start the Prefect server
+- Run scheduled pipelines automatically
 
-```bash
-code data-ingestion-framework.code-workspace
-```
+**Prefect UI**: http://127.0.0.1:4200
 
-**You'll get:**
+## 📝 YAML Configuration Guide
 
-- Auto-formatting on save
-- YAML auto-completion with validation
-- One-click testing and debugging
-- Coverage visualization
+All configuration is done through YAML files in the `config/` directory. See [config/README.md](config/README.md) for comprehensive documentation.
 
-See [VS Code Setup Guide](docs/vscode-setup.md) for details.
+### 1. Define a Source
 
-### 5. Run Your First Pipeline
-
-```bash
-# Run a pipeline locally
-python -m ingestion.cli run --pipeline youtube_to_databricks --env dev
-
-# Or using the VS Code debugger (F5)
-```
-
-## 📝 Configuration Guide
-
-### Defining a Source
-
-Create a YAML file in `config/environments/{env}/sources/`:
+Create `config/sources/my_api.yaml`:
 
 ```yaml
 source:
   name: my_api
   type: rest_api
-  environment: dev
 
   connection:
     base_url: "https://api.example.com"
     auth:
       type: bearer
-      credentials_secret_key: "API_TOKEN_DEV"
+      credentials_secret_key: "my_api_token_secret_key"
     timeout: 30
     retry:
       max_attempts: 3
@@ -157,70 +126,288 @@ source:
       write_disposition: "merge"
 ```
 
-### Defining a Destination
+### 2. Define a Destination
 
-Create a YAML file in `config/environments/{env}/destinations/`:
+Create `config/destinations/my_warehouse.yaml`:
 
 ```yaml
 destination:
-  name: databricks_dev
-  type: databricks
-  environment: dev
+  name: my_warehouse
+  type: duckdb
 
   connection:
-    server_hostname_secret_key: "DATABRICKS_HOST_DEV"
-    http_path_secret_key: "DATABRICKS_HTTP_PATH_DEV"
-    access_token_secret_key: "DATABRICKS_TOKEN_DEV"
-    catalog: "dev_catalog"
-    schema: "raw_data"
+    database: "./my_data.duckdb"
 
   settings:
-    table_format: "delta"
-    optimize_after_write: true
+    schema: "raw_data"
+    create_indexes: true
 ```
 
-### Defining a Pipeline
+### 3. Define a Pipeline
 
-Create a YAML file in `config/environments/{env}/pipelines/`:
+Create `config/pipelines/my_pipeline.yaml`:
 
 ```yaml
 pipeline:
   name: my_pipeline
-  environment: dev
+  description: "Ingest users from API to warehouse"
 
   source:
-    config_file: "sources/my_api.yaml"
+    config_file: "my_api.yaml"
     resources:
       - users
 
   destination:
-    config_file: "destinations/databricks.yaml"
+    config_file: "my_warehouse.yaml"
     dataset_name: "my_dataset"
 
-  schedule:
-    enabled: true
-    cron: "0 */6 * * *" # Every 6 hours
+  retry:
+    max_attempts: 3
+    initial_delay: 60
 ```
 
-**Dynamic Discovery**: Once you save the YAML file, it's automatically discovered by the framework. No code changes needed!
+### 4. Define a Job (Batch of Pipelines)
+
+Create `config/jobs/daily_ingestion.yaml`:
+
+```yaml
+job:
+  name: daily_ingestion
+  description: "Daily data ingestion from all sources"
+
+  pipelines:
+    - name: my_pipeline
+      order: 1
+      enabled: true
+
+  execution:
+    mode: sequential  # or: parallel, dag
+    max_parallelism: 3
+    continue_on_failure: false
+
+  retries:
+    max_attempts: 2
+    retry_delay: 300
+    exponential_backoff: true
+
+  notifications:
+    on_failure: true
+    on_success: false
+    channels: ["email"]
+
+  sla:
+    duration: 3600  # 1 hour
+```
+
+### 5. Define a Trigger (Schedule)
+
+Create `config/triggers/daily_schedule.yaml`:
+
+```yaml
+trigger:
+  name: daily_schedule
+  type: cron
+  enabled: true
+  job: daily_ingestion.yaml
+
+  schedule:
+    cron: "0 2 * * *"  # Run at 2 AM daily
+    timezone: "UTC"
+    catchup: false
+
+  tags:
+    - daily
+    - production
+```
+
+### 6. Run It!
 
 ```bash
-# Your new pipeline will appear here
-ingestion list-pipelines --env dev
+# Validate all configs
+python -m orchestration.main --validate
 
-# And can be run immediately
-ingestion run --pipeline my_pipeline --env dev
+# List everything
+python -m orchestration.main --list
+
+# Start orchestration (trigger will run at scheduled time)
+python -m orchestration.main
 ```
 
-destination:
-config_file: "destinations/databricks.yaml"
-dataset_name: "my_dataset"
+**That's it!** No Python code needed. The framework automatically:
+- ✅ Discovers all YAML configs
+- ✅ Resolves dependencies
+- ✅ Creates execution graph
+- ✅ Schedules jobs via triggers
+- ✅ Handles retries and failures
+- ✅ Sends notifications
 
-schedule:
-enabled: true
-cron: "0 _/6 _ \* \*" # Every 6 hours
+## 🔄 Orchestration Commands
 
-````
+### Main Entry Point
+
+```bash
+# Start orchestration (runs continuously with all schedules)
+python -m orchestration.main
+
+# List all configurations
+python -m orchestration.main --list
+
+# Validate all configurations
+python -m orchestration.main --validate
+
+# Custom log level
+python -m orchestration.main --log-level DEBUG
+```
+
+**Output Example:**
+
+```
+================================================================================
+YAML CONFIGURATIONS - Environment: DEV
+================================================================================
+
+📥 SOURCES (3):
+  • github_api (rest_api)
+    Resources: 3
+  • mock_api (rest_api)
+    Resources: 1
+  • youtube_api (rest_api)
+    Resources: 2
+
+📤 DESTINATIONS (2):
+  • duckdb_local (duckdb)
+  • databricks (databricks)
+
+🔄 PIPELINES (3):
+  • github_to_duckdb
+    Source: github_api.yaml
+    Destination: duckdb_local.yaml
+  • mock_to_duckdb
+    Source: mock_api.yaml
+    Destination: duckdb_local.yaml
+  • youtube_to_databricks
+    Source: youtube_api.yaml
+    Destination: databricks.yaml
+
+📦 JOBS (3):
+  • all_pipelines_job
+    Pipelines: 3
+    Mode: parallel
+  • hourly_analytics
+    Pipelines: 1
+    Mode: sequential
+  • mock_pipeline_job
+    Pipelines: 1
+    Mode: sequential
+
+⏰ TRIGGERS (7):
+  • daily_ingestion [✓ ENABLED]
+    Type: cron
+    Job: all_pipelines_job.yaml
+    Schedule: 0 1 * * *
+  • github_hourly [✓ ENABLED]
+    Type: cron
+    Job: hourly_analytics.yaml
+    Schedule: 0 * * * *
+  • manual_backfill [✓ ENABLED]
+    Type: manual
+    Job: all_pipelines_job.yaml
+```
+
+### Environment Management
+
+```bash
+# Set environment
+export ENVIRONMENT=dev    # or stage, prod
+
+# Verify current environment
+python -c "from ingestion.config.environment import get_environment; print(get_environment())"
+```
+
+### Utility Scripts
+
+```bash
+# List all configurations (detailed view)
+python scripts/list_configs.py
+
+# Validate all configurations
+python scripts/validate_configs.py
+
+# Check all required secrets
+python scripts/validate_secrets.py
+```
+
+## 🔐 Secrets Management
+
+Secrets are resolved automatically from environment variables based on `config/secrets_mapping.yaml`.
+
+### Adding a New Secret
+
+1. **Add to secrets mapping** (`config/secrets_mapping.yaml`):
+
+```yaml
+secrets:
+  my_api_token:
+    env_var_dev: "MY_API_TOKEN_DEV"
+    env_var_stage: "MY_API_TOKEN_STAGE"
+    env_var_prod: "MY_API_TOKEN_PROD"
+    description: "API authentication token"
+    required: true
+```
+
+2. **Reference in YAML config**:
+
+```yaml
+source:
+  connection:
+    auth:
+      credentials_secret_key: "my_api_token_secret_key"
+```
+
+3. **Set environment variable**:
+
+```bash
+export MY_API_TOKEN_DEV="your-token-here"
+```
+
+The framework automatically:
+- Uses correct environment variable based on `ENVIRONMENT`
+- Validates required secrets are present
+- Resolves secrets at runtime
+
+## 🎨 VS Code Setup
+
+For the best development experience, use VS Code with the provided workspace configuration.
+
+### Open Workspace
+
+```bash
+code data-ingestion-framework.code-workspace
+```
+
+### Features
+
+**Automatic:**
+- ✨ **Real-time YAML validation** - Invalid configs highlighted instantly
+- 📝 **Auto-completion** - IntelliSense for all YAML fields
+- 📖 **Inline documentation** - Hover to see field descriptions
+- ❌ **Error highlighting** - See validation errors as you type
+- 🔍 **Schema validation** - All configs validated against JSON schemas
+
+**When editing YAML files:**
+- Type-ahead suggestions for all fields
+- Validation against type-specific schemas
+- Documentation on hover
+- Enum value suggestions
+
+### Install Recommended Extensions
+
+When opening the workspace, VS Code will prompt to install 13 recommended extensions. Click "Install All" for:
+
+- Python, Pylance, Black, Ruff, isort
+- YAML, Docker, GitLens
+- Error Lens, Coverage Gutters, Todo Tree
+- Better Comments, Path Intellisense
 
 ## 🧪 Testing
 
@@ -231,268 +418,145 @@ pytest
 # Run specific test file
 pytest tests/unit/test_config_loader.py
 
-# Generate coverage report
+# Generate HTML coverage report
 pytest --cov=src --cov-report=html
 open htmlcov/index.html
-````
+```
 
-**Note**: The project requires **100% test coverage**. Tests will fail if coverage drops below this threshold.
+**VS Code Tasks:**
 
-## 🎮 Using the Framework
+- `Run Tests` - Quick test run
+- `Run Tests with Coverage` - Full coverage report (default)
+- `Format Code` - Black + isort
+- `Lint Code` - Ruff checks
+- `Type Check` - mypy validation
 
-### CLI Commands
+Access via: `Cmd+Shift+P` → "Tasks: Run Task"
+
+## 📚 Configuration Deep Dive
+
+See [config/README.md](config/README.md) for:
+
+- Complete field reference for all YAML types
+- Environment variable patterns
+- Secret resolution details
+- Dependency configuration
+- Advanced examples
+- Best practices
+
+## 🏗️ Architecture
+
+### How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        YAML Configs                             │
+│  (data engineers edit these - no Python needed)                 │
+└──────────────────────┬──────────────────────────────────────────┘
+                       │
+                       │ Auto-Discovery
+                       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   orchestration/main.py                         │
+│  - Loads all YAMLs from config/                                 │
+│  - Validates against JSON schemas                               │
+│  - Builds dependency graph                                      │
+└──────────────────────┬──────────────────────────────────────────┘
+                       │
+                       │ Dynamic Flow Generation
+                       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Prefect Flows                              │
+│  - One flow per job                                             │
+│  - Respects dependencies                                        │
+│  - Handles retries, notifications, SLAs                         │
+└──────────────────────┬──────────────────────────────────────────┘
+                       │
+                       │ Trigger-based Execution
+                       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Pipeline Execution                           │
+│  - Runs based on trigger schedules                              │
+│  - Sequential/Parallel/DAG modes                                │
+│  - Automatic secret resolution                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Execution Modes
+
+**Sequential**: Pipelines run one after another in `order`
+
+**Parallel**: All pipelines run simultaneously (up to `max_parallelism`)
+
+**DAG**: Respects `depends_on` relationships, runs in parallel where possible
+
+## 🛠️ Development Workflow
+
+### For Data Engineers (YAML Only)
+
+1. Edit YAML files in `config/` using VS Code
+2. Save (validation happens automatically)
+3. Run `python -m orchestration.main --validate`
+4. Run `python -m orchestration.main` to test
+5. Commit YAML changes to git
+
+**No Python code changes needed!**
+
+### For Framework Developers (Python)
+
+1. Make changes to `src/ingestion/` or `orchestration/`
+2. Run tests: `pytest --cov=src`
+3. Format: `black src tests && isort src tests`
+4. Lint: `ruff check src tests`
+5. Type check: `mypy src`
+6. Commit changes
+
+## 🐳 Deployment
+
+### Local Development
 
 ```bash
-# List available pipelines
-ingestion list-pipelines --env dev
-
-# List all sources
-ingestion list-sources --env dev
-
-# List all destinations
-ingestion list-destinations --env dev
-
-# Discover all configurations
-ingestion discover --env dev
-
-# Validate a pipeline
-ingestion validate --pipeline youtube_to_databricks --env dev
-
-# Check secrets
-ingestion check-secrets --env dev
-
-# Run a pipeline
-ingestion run --pipeline youtube_to_databricks --env dev
-
-# Run with custom log level
-ingestion --log-level DEBUG run --pipeline youtube_to_databricks
+export ENVIRONMENT=dev
+python -m orchestration.main
 ```
 
-### Using Scripts
+### Production (Systemd)
 
-```bash
-# List all configurations (detailed view)
-python scripts/list_configs.py --env dev
-
-# Validate all configurations
-python scripts/validate_configs.py --env dev
-
-# Check all required secrets
-python scripts/validate_secrets.py --env dev
-```
-
-### Programmatic Usage
-
-```python
-from ingestion.config import ConfigLoader
-from ingestion.config.models import Environment
-from ingestion.pipelines import PipelineExecutor
-
-# Initialize loader for dev environment
-loader = ConfigLoader(Environment.DEV)
-
-# Discover all configurations dynamically
-all_configs = loader.discover_all_configs()
-print(f"Found {len(all_configs['pipelines'])} pipelines")
-
-# Load specific pipeline
-pipeline_config = loader.load_pipeline_config("youtube_to_databricks.yaml")
-
-# Execute pipeline
-executor = PipelineExecutor()
-result = executor.execute_pipeline_with_retry("youtube_to_databricks")
-
-if result.success:
-    print(f"Completed in {result.duration_seconds}s")
-    print(f"Processed {result.rows_processed} rows")
-
-# Or work with all pipelines dynamically
-pipelines = loader.load_all_pipelines()
-for name, config in pipelines.items():
-    if config.schedule.enabled:
-        result = executor.execute_pipeline(name)
-        print(f"{name}: {'✓' if result.success else '✗'}")
-```
-
-### Examples
-
-See the `examples/` directory for complete examples:
-
-```bash
-# Run the YouTube API example
-python examples/run_youtube_pipeline.py
-```
-
-## 🐳 Docker & Airflow
-
-### Start Airflow
-
-```bash
-# Switch to dev environment
-./scripts/switch_env.sh dev
-
-# Start Airflow
-cd docker/dev
-docker-compose up -d
-
-# Access Airflow UI
-open http://localhost:8080
-```
-
-### Deploy to Stage/Prod
-
-Deployments to stage and prod are automated via GitHub Actions.
-
-## 🔐 Secrets Management
-
-Secrets are managed through:
-
-1. **Local Development**: `.env` file
-2. **CI/CD**: GitHub Secrets
-
-### Adding a Secret
-
-1. Add to `config/environments/{env}/secrets_mapping.yaml`:
-
-```yaml
-secrets:
-  MY_SECRET_KEY:
-    github_secret: "MY_SECRET_KEY"
-    description: "Description of the secret"
-    required: true
-```
-
-2. Add to `.env.{env}.example`:
-
-```bash
-MY_SECRET_KEY=placeholder-value
-```
-
-3. For GitHub Actions, add to repository secrets
+See [deployment/README.md](deployment/README.md) for:
+- Systemd service configuration
+- Docker deployment
+- Environment setup
+- Monitoring setup
 
 ## 📊 Monitoring
 
-The framework includes built-in monitoring:
+Access the Prefect UI to monitor:
+- Flow runs and status
+- Execution duration
+- Failure logs
+- Scheduled triggers
 
-- Pipeline execution metrics
-- Data quality scores
-- Error tracking (with Sentry in prod)
-- Custom alerts via email/Slack
-
-## 🛠️ Development
-
-### VS Code Setup
-
-The project includes a fully configured VS Code workspace with:
-
-**Automatic Features:**
-
-- ✨ **Auto-formatting** with Black on save (100 char line length)
-- 📦 **Auto-import sorting** with isort on save
-- 🔍 **Real-time linting** with Ruff
-- 🎯 **Type checking** with Pylance (strict mode)
-- 📊 **Coverage gutters** showing test coverage inline
-- ✅ **YAML validation** with JSON schemas for all config files
-
-**Open the workspace:**
-
-```bash
-code data-ingestion-framework.code-workspace
-```
-
-**Install recommended extensions** when prompted (13 extensions):
-
-- Python, Pylance, Black, Ruff, isort
-- YAML, Docker, GitLens
-- Error Lens, Coverage Gutters, Todo Tree
-- Better Comments, Path Intellisense
-
-**YAML Auto-completion:**
-When editing YAML config files, you get:
-
-- IntelliSense with field suggestions
-- Validation against JSON schemas
-- Hover documentation for all fields
-- Error highlighting for invalid values
-
-### Running Tasks
-
-Use VS Code tasks (Cmd+Shift+P → "Tasks: Run Task"):
-
-**Testing:**
-
-- `Run Tests` - Run pytest
-- `Run Tests with Coverage` - With coverage report (default)
-
-**Code Quality:**
-
-- `Format Code` - Run Black + isort
-- `Lint Code` - Run Ruff
-- `Type Check` - Run mypy
-
-**Configuration:**
-
-- `Validate Configs` - Validate all YAML configs
-- `List All Configs` - Show detailed config listing
-- `Discover Configs (CLI)` - Run discovery command
-- `Switch Environment` - Switch between dev/stage/prod
-
-**Setup:**
-
-- `Setup Project` - Run initial setup script
-- `Run Quickstart` - Verify installation
-
-### Debug Configurations
-
-Press F5 or use the Debug panel to run:
-
-**Execution:**
-
-- `Python: Current File` - Debug any Python file
-- `Run Pipeline (Dev)` - Debug YouTube pipeline
-- `List Pipelines` - Debug pipeline listing
-- `Discover All Configs` - Debug config discovery
-
-**Testing:**
-
-- `Run Tests with Coverage` - Debug all tests
-- `Run Current Test File` - Debug open test file
-
-All debug configs include proper PYTHONPATH and environment variables.
-
-## 📚 Documentation
-
-Detailed documentation is available in the `docs/` directory:
-
-- [Getting Started](docs/getting-started.md)
-- [Configuration Guide](docs/configuration-guide.md)
-- [API Sources](docs/source-setup/api-sources.md)
-- [Database Sources](docs/source-setup/database-sources.md)
-- [Troubleshooting](docs/troubleshooting.md)
+**Prefect UI**: http://127.0.0.1:4200
 
 ## 🤝 Contributing
 
 1. Create a feature branch
-2. Make your changes
-3. Ensure tests pass with 100% coverage
-4. Run pre-commit hooks
+2. Make your changes (YAML for configs, Python for framework)
+3. Ensure tests pass: `pytest --cov=src`
+4. Run pre-commit hooks: `pre-commit run --all-files`
 5. Submit a pull request
 
 ## 📄 License
 
 MIT License - see LICENSE file
 
-## 👥 Support
-
-For questions or issues:
-
-- Open a GitHub issue
-- Contact: data-engineering@example.com
-
 ## 🗺️ Roadmap
 
-- [ ] Add support for more source types (PostgreSQL, MySQL, S3)
-- [ ] Add support for more destinations (Snowflake, BigQuery)
-- [ ] Implement transformation layer
-- [ ] Add data lineage tracking
-- [ ] Add web UI for pipeline monitoring
+- [x] YAML-driven configuration
+- [x] Auto-discovery and orchestration
+- [x] Job and trigger system
+- [x] Multiple execution modes
+- [ ] Web UI for configuration
+- [ ] Data lineage tracking
+- [ ] Advanced transformations
+- [ ] More source/destination types

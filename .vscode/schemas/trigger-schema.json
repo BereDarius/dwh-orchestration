@@ -136,49 +136,31 @@
         "properties": {
           "trigger": {
             "required": [
-              "schedule"
+              "interval"
             ],
             "properties": {
-              "schedule": {
+              "interval": {
                 "type": "object",
+                "description": "Interval configuration",
                 "required": [
-                  "interval"
+                  "value",
+                  "unit"
                 ],
                 "properties": {
-                  "interval": {
-                    "type": "object",
-                    "description": "Interval configuration",
-                    "required": [
-                      "value",
-                      "unit"
+                  "value": {
+                    "type": "integer",
+                    "description": "Interval value",
+                    "minimum": 1
+                  },
+                  "unit": {
+                    "type": "string",
+                    "enum": [
+                      "seconds",
+                      "minutes",
+                      "hours",
+                      "days"
                     ],
-                    "properties": {
-                      "value": {
-                        "type": "integer",
-                        "description": "Interval value",
-                        "minimum": 1
-                      },
-                      "unit": {
-                        "type": "string",
-                        "enum": [
-                          "seconds",
-                          "minutes",
-                          "hours",
-                          "days"
-                        ],
-                        "description": "Interval unit"
-                      }
-                    }
-                  },
-                  "start_time": {
-                    "type": "string",
-                    "description": "ISO 8601 timestamp when interval should start",
-                    "format": "date-time"
-                  },
-                  "end_time": {
-                    "type": "string",
-                    "description": "ISO 8601 timestamp when interval should end",
-                    "format": "date-time"
+                    "description": "Interval unit"
                   }
                 }
               }
