@@ -14,7 +14,7 @@ source:
     retry:
       max_attempts: 3
       backoff_factor: 2
-      backoff_max: 60
+      initial_delay: 1
 
   resources:
     - name: repos

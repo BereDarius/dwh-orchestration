@@ -1,0 +1,54 @@
+# All Pipelines Job Configuration
+job:
+  name: all_pipelines_job
+  description: "Execute all configured pipelines in the environment"
+  environment: dev
+
+  tags:
+    - daily
+    - batch
+    - all-pipelines
+
+  # No dependencies - can run immediately
+  dependencies: []
+
+  # This will be dynamically populated with all pipelines at runtime
+  # For now, include known pipelines
+  pipelines:
+    - name: github_to_duckdb
+      order: 1
+      depends_on: []
+      enabled: true
+      continue_on_failure: true # Don't stop if one pipeline fails
+
+    - name: mock_to_duckdb
+      order: 1 # Same order means can run in parallel
+      depends_on: []
+      enabled: true
+      continue_on_failure: true
+
+  # Execution configuration
+  execution:
+    mode: parallel # Run all pipelines at once
+    max_parallelism: 5
+    continue_on_failure: true # Continue even if some fail
+    timeout: 7200 # 2 hours total
+
+  # Retry configuration
+  retries:
+    max_attempts: 2
+    retry_delay: 120
+    exponential_backoff: false
+
+  # Notifications
+  notifications:
+    on_success: false
+    on_failure: true
+    on_retry: false
+    channels:
+      - email
+
+  # Metadata
+  metadata:
+    owner: "data-engineering-team"
+    version: "1.0.0"

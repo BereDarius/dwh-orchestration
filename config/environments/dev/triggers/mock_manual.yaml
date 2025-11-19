@@ -2,18 +2,18 @@
 trigger:
   name: mock_manual
   description: "Manual trigger for mock API pipeline (no schedule)"
+  type: manual
+  enabled: true
+  environment: dev
 
-  # Pipeline to execute
-  pipeline: mock_to_duckdb
+  # Job to execute
+  job: mock_pipeline_job.yaml
 
-  # No schedule - manual trigger only
-  schedule:
-    enabled: false
+  # Manual triggers don't have schedules
+  # They are executed via API or UI
 
-  # Retry configuration
-  retries:
-    max_attempts: 1
-    retry_delay_seconds: 30
+  # No additional parameters
+  parameters: {}
 
   # Tags for organization
   tags:

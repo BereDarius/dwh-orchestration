@@ -1,28 +1,27 @@
-# GitHub Pipeline Trigger Configuration
+# Hourly Analytics Trigger Configuration
 trigger:
-  name: github_hourly
-  description: "Fetch GitHub repository data every hour"
+  name: hourly_analytics_trigger
+  description: "Execute hourly analytics job every hour"
+  type: cron
+  enabled: true
+  environment: dev
 
-  # Pipeline to execute
-  pipeline: github_to_duckdb
+  # Job to execute
+  job: hourly_analytics.yaml
 
   # Schedule configuration
   schedule:
-    enabled: true
     cron: "0 * * * *" # Every hour at minute 0
     timezone: "UTC"
+    catchup: false
+    jitter: 60 # Add up to 60 seconds of random delay
 
-  # Pipeline parameters (optional overrides)
+  # Job parameters (optional overrides)
   parameters:
-    username: "torvalds"
-
-  # Retry configuration
-  retries:
-    max_attempts: 3
-    retry_delay_seconds: 60
+    override_parallelism: 3
 
   # Tags for organization
   tags:
-    - github
+    - analytics
     - hourly
-    - public-data
+    - automated

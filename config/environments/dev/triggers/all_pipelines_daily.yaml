@@ -2,25 +2,21 @@
 trigger:
   name: all_pipelines_daily
   description: "Run all configured pipelines once per day"
+  type: cron
+  enabled: true
+  environment: dev
 
-  # Special trigger type: all pipelines
-  pipeline: "*" # Wildcard means all pipelines
+  # Job to execute
+  job: all_pipelines_job.yaml
 
   # Schedule configuration
   schedule:
-    enabled: true
     cron: "0 2 * * *" # Daily at 2:00 AM UTC
     timezone: "UTC"
+    catchup: false
 
-  # Execution settings
-  execution:
-    parallel: true # Run pipelines in parallel
-    continue_on_failure: true # Don't stop if one pipeline fails
-
-  # Retry configuration
-  retries:
-    max_attempts: 2
-    retry_delay_seconds: 120
+  # No additional parameters
+  parameters: {}
 
   # Tags for organization
   tags:

@@ -1,0 +1,45 @@
+# Mock Pipeline Job Configuration
+job:
+  name: mock_pipeline_job
+  description: "Execute mock API pipeline for testing"
+  environment: dev
+
+  tags:
+    - mock
+    - manual
+    - testing
+
+  # No dependencies
+  dependencies: []
+
+  # Single pipeline
+  pipelines:
+    - name: mock_to_duckdb
+      order: 1
+      depends_on: []
+      enabled: true
+      continue_on_failure: false
+
+  # Execution configuration
+  execution:
+    mode: sequential
+    max_parallelism: 1
+    continue_on_failure: false
+    timeout: 300 # 5 minutes
+
+  # Retry configuration
+  retries:
+    max_attempts: 1
+    retry_delay: 30
+    exponential_backoff: false
+
+  # Notifications
+  notifications:
+    on_success: false
+    on_failure: false
+    on_retry: false
+
+  # Metadata
+  metadata:
+    owner: "data-engineering-team"
+    version: "1.0.0"

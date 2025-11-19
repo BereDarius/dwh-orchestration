@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Pipeline Configuration",
-  "description": "Configuration schema for data pipelines",
+  "description": "Comprehensive configuration schema for data pipelines with dependencies and execution control",
   "type": "object",
   "required": [
     "pipeline"
@@ -13,8 +13,7 @@
         "name",
         "environment",
         "source",
-        "destination",
-        "schedule"
+        "destination"
       ],
       "properties": {
         "name": {
@@ -35,21 +34,27 @@
           ],
           "description": "Environment for this pipeline"
         },
+        "tags": {
+          "type": "array",
+          "description": "Tags for pipeline organization and filtering",
+          "items": {
+            "type": "string"
+          }
+        },
         "source": {
           "type": "object",
           "required": [
-            "config_file",
-            "resources"
+            "config_file"
           ],
           "properties": {
             "config_file": {
               "type": "string",
               "description": "Source configuration file (in sources/ directory)",
-              "pattern": "^sources/.*\\.yaml$"
+              "pattern": "^(sources/)?[a-z0-9_]+\\.yaml$"
             },
             "resources": {
               "type": "array",
-              "description": "List of resources to extract",
+              "description": "List of resources to extract (if omitted, all resources from source config)",
               "items": {
                 "type": "string"
               },
@@ -57,7 +62,8 @@
             },
             "params": {
               "type": "object",
-              "description": "Runtime parameters for the source"
+              "description": "Runtime parameters for the source",
+              "additionalProperties": true
             }
           }
         },
@@ -71,44 +77,26 @@
             "config_file": {
               "type": "string",
               "description": "Destination configuration file (in destinations/ directory)",
-              "pattern": "^destinations/.*\\.yaml$"
+              "pattern": "^(destinations/)?[a-z0-9_]+\\.yaml$"
             },
             "dataset_name": {
               "type": "string",
-              "description": "Target dataset/schema name"
+              "description": "Target dataset/schema name",
+              "pattern": "^[a-z0-9_]+$"
             },
             "table_prefix": {
               "type": "string",
-              "description": "Optional prefix for table names"
+              "description": "Optional prefix for table names",
+              "pattern": "^[a-z0-9_]*$"
             }
           }
         },
-        "schedule": {
-          "type": "object",
-          "required": [
-            "enabled",
-            "cron"
-          ],
-          "properties": {
-            "enabled": {
-              "type": "boolean",
-              "description": "Whether this pipeline is enabled"
-            },
-            "cron": {
-              "type": "string",
-              "description": "Cron expression for scheduling (e.g., '0 */6 * * *' for every 6 hours)",
-              "pattern": "^(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every (\\d+(ns|us|µs|ms|s|m|h))+)|(((\\S+) ){4}\\S+)$"
-            },
-            "timezone": {
-              "type": "string",
-              "description": "Timezone for the schedule",
-              "default": "UTC"
-            },
-            "catchup": {
-              "type": "boolean",
-              "description": "Whether to run missed schedules",
-              "default": false
-            }
+        "dependencies": {
+          "type": "array",
+          "description": "List of pipeline names that must complete successfully before this pipeline runs",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
           }
         },
         "execution": {

@@ -1,0 +1,281 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Job Configuration",
+  "description": "Configuration schema for jobs - a batch of pipelines to be executed with dependencies",
+  "type": "object",
+  "required": [
+    "job"
+  ],
+  "properties": {
+    "job": {
+      "type": "object",
+      "required": [
+        "name",
+        "environment",
+        "pipelines"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique name for this job",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of the job"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "dev",
+            "stage",
+            "prod"
+          ],
+          "description": "Environment for this job"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags for job organization and filtering",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "description": "List of job names that must complete successfully before this job runs",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          }
+        },
+        "pipelines": {
+          "type": "array",
+          "description": "List of pipelines to execute in this job",
+          "items": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Pipeline name or configuration file",
+                "pattern": "^[a-z0-9_]+(\\.yaml)?$"
+              },
+              "order": {
+                "type": "integer",
+                "description": "Execution order within the job (lower numbers run first)",
+                "minimum": 0,
+                "default": 0
+              },
+              "depends_on": {
+                "type": "array",
+                "description": "List of pipeline names (within this job) that must complete before this pipeline runs",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9_]+$"
+                }
+              },
+              "parameters": {
+                "type": "object",
+                "description": "Parameters to override for this pipeline execution",
+                "additionalProperties": true
+              },
+              "enabled": {
+                "type": "boolean",
+                "description": "Whether this pipeline is enabled in the job",
+                "default": true
+              },
+              "continue_on_failure": {
+                "type": "boolean",
+                "description": "Whether to continue job execution if this pipeline fails",
+                "default": false
+              }
+            }
+          },
+          "minItems": 1
+        },
+        "execution": {
+          "type": "object",
+          "description": "Job execution configuration",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "sequential",
+                "parallel",
+                "dag"
+              ],
+              "description": "Execution mode: sequential (one by one), parallel (all at once), dag (respects dependencies)",
+              "default": "dag"
+            },
+            "max_parallelism": {
+              "type": "integer",
+              "description": "Maximum number of pipelines to run in parallel (for parallel/dag modes)",
+              "minimum": 1,
+              "default": 5
+            },
+            "continue_on_failure": {
+              "type": "boolean",
+              "description": "Whether to continue executing remaining pipelines if one fails",
+              "default": false
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "Maximum execution time for the entire job in seconds",
+              "minimum": 0
+            }
+          }
+        },
+        "retries": {
+          "type": "object",
+          "description": "Retry configuration for the entire job",
+          "properties": {
+            "max_attempts": {
+              "type": "integer",
+              "description": "Maximum number of retry attempts for the job",
+              "minimum": 0,
+              "maximum": 10,
+              "default": 0
+            },
+            "retry_delay": {
+              "type": "integer",
+              "description": "Delay between retries in seconds",
+              "minimum": 0,
+              "default": 60
+            },
+            "exponential_backoff": {
+              "type": "boolean",
+              "description": "Whether to use exponential backoff for retries",
+              "default": true
+            },
+            "backoff_factor": {
+              "type": "number",
+              "description": "Multiplier for exponential backoff",
+              "minimum": 1,
+              "default": 2
+            },
+            "retry_on": {
+              "type": "array",
+              "description": "List of failure types that should trigger a retry",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "timeout",
+                  "connection_error",
+                  "data_quality_error",
+                  "partial_failure"
+                ]
+              },
+              "default": [
+                "timeout",
+                "connection_error"
+              ]
+            }
+          }
+        },
+        "notifications": {
+          "type": "object",
+          "description": "Notification configuration for job events",
+          "properties": {
+            "on_success": {
+              "type": "boolean",
+              "description": "Send notification on successful job completion",
+              "default": false
+            },
+            "on_failure": {
+              "type": "boolean",
+              "description": "Send notification on job failure",
+              "default": true
+            },
+            "on_retry": {
+              "type": "boolean",
+              "description": "Send notification on job retry",
+              "default": false
+            },
+            "on_sla_miss": {
+              "type": "boolean",
+              "description": "Send notification if job exceeds SLA",
+              "default": true
+            },
+            "channels": {
+              "type": "array",
+              "description": "Notification channels to use",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "email",
+                  "slack",
+                  "pagerduty",
+                  "webhook"
+                ]
+              },
+              "default": [
+                "email"
+              ]
+            },
+            "recipients": {
+              "type": "array",
+              "description": "List of recipients (emails, slack channels, etc.)",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "sla": {
+          "type": "object",
+          "description": "Service Level Agreement configuration",
+          "properties": {
+            "max_duration_minutes": {
+              "type": "integer",
+              "description": "Maximum expected duration for job completion in minutes",
+              "minimum": 1
+            },
+            "expected_completion_time": {
+              "type": "string",
+              "description": "Expected completion time in HH:MM format (e.g., '09:00' for 9 AM)",
+              "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$"
+            },
+            "timezone": {
+              "type": "string",
+              "description": "Timezone for expected completion time",
+              "default": "UTC"
+            }
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Additional metadata for the job",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Job owner or team"
+            },
+            "version": {
+              "type": "string",
+              "description": "Job version",
+              "pattern": "^\\d+\\.\\d+\\.\\d+$"
+            },
+            "documentation_url": {
+              "type": "string",
+              "description": "URL to job documentation",
+              "format": "uri"
+            },
+            "runbook_url": {
+              "type": "string",
+              "description": "URL to operational runbook",
+              "format": "uri"
+            },
+            "custom": {
+              "type": "object",
+              "description": "Custom metadata fields",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

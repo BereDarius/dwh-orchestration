@@ -10,12 +10,12 @@ source:
     auth:
       type: oauth2
       # This key maps to GitHub Secret: YOUTUBE_API_KEY_DEV
-      credentials_secret_key: "YOUTUBE_API_KEY_DEV"
+      credentials_secret_key: "youtube_api_credentials_secret_key"
     timeout: 30
     retry:
-      max_attempts: 3
+      max_attempts: 5
       backoff_factor: 2
-      backoff_max: 60
+      initial_delay: 1
 
   resources:
     - name: channel_stats

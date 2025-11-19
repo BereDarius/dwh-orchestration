@@ -1,0 +1,24 @@
+# Manual Trigger Configuration
+trigger:
+  name: manual_backfill_trigger
+  description: "Manual trigger for running backfill jobs on demand"
+  type: manual
+  enabled: true
+  environment: dev
+
+  # Job to execute
+  job: daily_data_ingestion.yaml
+
+  # Manual triggers don't have schedules
+  # They are executed via API or UI
+
+  # Default parameters for manual runs
+  parameters:
+    backfill_days: 7
+    skip_validation: false
+
+  # Tags for organization
+  tags:
+    - manual
+    - backfill
+    - adhoc

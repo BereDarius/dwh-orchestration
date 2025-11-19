@@ -1,0 +1,26 @@
+# Daily Data Ingestion Trigger Configuration
+trigger:
+  name: daily_ingestion_trigger
+  description: "Execute daily data ingestion job at 2 AM UTC"
+  type: cron
+  enabled: true
+  environment: dev
+
+  # Job to execute
+  job: daily_data_ingestion.yaml
+
+  # Schedule configuration
+  schedule:
+    cron: "0 2 * * *" # Daily at 2 AM UTC
+    timezone: "UTC"
+    catchup: true # Run missed schedules if service was down
+    jitter: 300 # Add up to 5 minutes of random delay
+
+  # No additional parameters needed
+  parameters: {}
+
+  # Tags for organization
+  tags:
+    - data-ingestion
+    - daily
+    - critical

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Data Source Configuration",
-  "description": "Configuration schema for data sources",
+  "description": "Comprehensive configuration schema for data sources with conditional validation based on source type",
   "type": "object",
   "required": [
     "source"
@@ -13,13 +13,17 @@
         "name",
         "type",
         "environment",
-        "connection",
-        "resources"
+        "connection"
       ],
       "properties": {
         "name": {
           "type": "string",
-          "description": "Unique name for this source"
+          "description": "Unique name for this source",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of the source"
         },
         "type": {
           "type": "string",
@@ -42,61 +46,42 @@
         },
         "connection": {
           "type": "object",
-          "description": "Connection configuration",
+          "description": "Connection configuration - always available properties",
           "properties": {
-            "base_url": {
-              "type": "string",
-              "description": "Base URL for REST API sources"
-            },
-            "auth": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "enum": [
-                    "bearer",
-                    "api_key",
-                    "basic",
-                    "oauth2"
-                  ],
-                  "description": "Authentication type"
-                },
-                "credentials_secret_key": {
-                  "type": "string",
-                  "description": "Secret key for credentials (must end with _secret_key)"
-                },
-                "username_secret_key": {
-                  "type": "string",
-                  "description": "Secret key for username (for basic auth)"
-                },
-                "password_secret_key": {
-                  "type": "string",
-                  "description": "Secret key for password (for basic auth)"
-                }
-              }
-            },
             "timeout": {
               "type": "integer",
-              "description": "Request timeout in seconds",
+              "description": "Connection timeout in seconds",
+              "minimum": 0,
               "default": 30
             },
             "retry": {
               "type": "object",
+              "description": "Retry policy configuration",
               "properties": {
                 "max_attempts": {
                   "type": "integer",
+                  "description": "Maximum number of retry attempts",
                   "minimum": 1,
                   "maximum": 10,
                   "default": 3
                 },
                 "backoff_factor": {
                   "type": "number",
-                  "minimum": 1,
+                  "description": "Exponential backoff factor for retries",
+                  "minimum": 0,
                   "default": 2
+                },
+                "initial_delay": {
+                  "type": "number",
+                  "description": "Initial delay in seconds before first retry",
+                  "minimum": 0,
+                  "default": 1
                 }
-              }
+              },
+              "additionalProperties": false
             }
-          }
+          },
+          "additionalProperties": true
         },
         "resources": {
           "type": "array",
@@ -104,32 +89,36 @@
           "items": {
             "type": "object",
             "required": [
-              "name",
-              "endpoint"
+              "name"
             ],
             "properties": {
               "name": {
                 "type": "string",
-                "description": "Resource name"
+                "description": "Resource name",
+                "pattern": "^[a-z0-9_]+$"
               },
               "endpoint": {
                 "type": "string",
-                "description": "API endpoint path"
+                "description": "API endpoint path (for REST API sources)"
               },
               "method": {
                 "type": "string",
                 "enum": [
                   "GET",
-                  "POST"
+                  "POST",
+                  "PUT",
+                  "PATCH"
                 ],
-                "default": "GET"
+                "default": "GET",
+                "description": "HTTP method (for REST API sources)"
               },
               "params": {
                 "type": "object",
-                "description": "Query parameters"
+                "description": "Query or request parameters"
               },
               "incremental": {
                 "type": "object",
+                "description": "Incremental loading configuration",
                 "properties": {
                   "enabled": {
                     "type": "boolean",
@@ -146,11 +135,19 @@
                 }
               },
               "primary_key": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "description": "Primary key fields"
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "description": "Single primary key field"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Composite primary key fields"
+                  }
+                ]
               },
               "write_disposition": {
                 "type": "string",
@@ -159,12 +156,246 @@
                   "replace",
                   "merge"
                 ],
-                "default": "append"
+                "default": "append",
+                "description": "How to write data to destination"
               }
             }
           }
         }
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "source": {
+            "properties": {
+              "type": {
+                "const": "rest_api"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "required": [
+                  "base_url"
+                ],
+                "properties": {
+                  "base_url": {
+                    "type": "string",
+                    "description": "Base URL for REST API",
+                    "pattern": "^https?://"
+                  },
+                  "auth": {
+                    "type": "object",
+                    "required": [
+                      "type"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "bearer",
+                          "api_key",
+                          "basic",
+                          "oauth2",
+                          "none"
+                        ],
+                        "description": "Authentication type"
+                      },
+                      "credentials_secret_key": {
+                        "type": "string",
+                        "description": "Secret key for credentials",
+                        "pattern": "_secret_key$"
+                      },
+                      "username_secret_key": {
+                        "type": "string",
+                        "description": "Secret key for username (for basic auth)",
+                        "pattern": "_secret_key$"
+                      },
+                      "password_secret_key": {
+                        "type": "string",
+                        "description": "Secret key for password (for basic auth)",
+                        "pattern": "_secret_key$"
+                      },
+                      "token_secret_key": {
+                        "type": "string",
+                        "description": "Secret key for token (for bearer/api_key auth)",
+                        "pattern": "_secret_key$"
+                      }
+                    }
+                  },
+                  "headers": {
+                    "type": "object",
+                    "description": "Additional HTTP headers",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "timeout": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "retry": {
+                    "type": "object"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "resources": {
+                "type": "array",
+                "items": {
+                  "required": [
+                    "name",
+                    "endpoint"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "source": {
+            "properties": {
+              "type": {
+                "const": "database"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "required": [
+                  "connection_string_secret_key"
+                ],
+                "properties": {
+                  "connection_string_secret_key": {
+                    "type": "string",
+                    "description": "Secret key for database connection string",
+                    "pattern": "_secret_key$"
+                  },
+                  "database": {
+                    "type": "string",
+                    "description": "Database name"
+                  },
+                  "schema": {
+                    "type": "string",
+                    "description": "Database schema"
+                  },
+                  "timeout": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "retry": {
+                    "type": "object"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "resources": {
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "table": {
+                      "type": "string",
+                      "description": "Table name to extract"
+                    },
+                    "query": {
+                      "type": "string",
+                      "description": "Custom SQL query to extract data"
+                    }
+                  },
+                  "oneOf": [
+                    {
+                      "required": [
+                        "table"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "query"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "source": {
+            "properties": {
+              "type": {
+                "const": "file"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "properties": {
+              "connection": {
+                "type": "object",
+                "required": [
+                  "path"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "File path or pattern (supports glob patterns)"
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "csv",
+                      "json",
+                      "parquet",
+                      "jsonl",
+                      "xlsx"
+                    ],
+                    "description": "File format"
+                  },
+                  "encoding": {
+                    "type": "string",
+                    "default": "utf-8",
+                    "description": "File encoding"
+                  },
+                  "timeout": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "retry": {
+                    "type": "object"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 }

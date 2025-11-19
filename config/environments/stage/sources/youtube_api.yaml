@@ -9,12 +9,12 @@ source:
     base_url: "https://www.googleapis.com/youtube/v3"
     auth:
       type: oauth2
-      credentials_secret_key: "YOUTUBE_API_KEY_STAGE"
+      credentials_secret_key: "youtube_api_credentials_secret_key"
     timeout: 60
     retry:
       max_attempts: 5
-      backoff_factor: 2
-      backoff_max: 120
+      backoff_factor: 3
+      initial_delay: 1
 
   resources:
     - name: channel_stats

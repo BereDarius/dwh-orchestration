@@ -1,0 +1,27 @@
+# Interval-based Trigger Configuration
+trigger:
+  name: realtime_monitoring_trigger
+  description: "Run monitoring job every 15 minutes"
+  type: interval
+  enabled: true
+  environment: dev
+
+  # Job to execute
+  job: hourly_analytics.yaml
+
+  # Interval configuration
+  schedule:
+    interval:
+      value: 15
+      unit: minutes
+    start_time: "2025-01-01T00:00:00Z" # ISO 8601 format
+
+  # Parameters
+  parameters:
+    monitoring_mode: true
+
+  # Tags for organization
+  tags:
+    - monitoring
+    - realtime
+    - interval

@@ -1,0 +1,65 @@
+# Hourly Analytics Job Configuration
+job:
+  name: hourly_analytics
+  description: "Hourly job for processing analytics data with dependencies"
+  environment: dev
+
+  tags:
+    - hourly
+    - analytics
+    - reporting
+
+  # This job depends on daily_data_ingestion completing first
+  dependencies:
+    - daily_data_ingestion
+
+  # Pipelines to execute in parallel (no internal dependencies)
+  pipelines:
+    - name: github_to_duckdb
+      order: 1
+      depends_on: []
+      parameters:
+        username: "kubernetes"
+      enabled: true
+      continue_on_failure: false
+
+    - name: mock_to_duckdb
+      order: 1 # Same order means can run in parallel
+      depends_on: []
+      enabled: true
+      continue_on_failure: true # Continue even if this fails
+
+  # Execution configuration
+  execution:
+    mode: parallel # Run all pipelines at once
+    max_parallelism: 5
+    continue_on_failure: true
+    timeout: 1800 # 30 minutes
+
+  # Retry configuration
+  retries:
+    max_attempts: 2
+    retry_delay: 120
+    exponential_backoff: false
+    retry_on:
+      - timeout
+
+  # Notifications
+  notifications:
+    on_success: false
+    on_failure: true
+    on_retry: true
+    on_sla_miss: true
+    channels:
+      - slack
+    recipients:
+      - "#analytics-alerts"
+
+  # SLA
+  sla:
+    max_duration_minutes: 20
+
+  # Metadata
+  metadata:
+    owner: "analytics-team"
+    version: "1.1.0"
