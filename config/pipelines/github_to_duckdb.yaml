@@ -2,7 +2,6 @@
 pipeline:
   name: github_to_duckdb
   description: "Analyze GitHub repository activity and statistics"
-  environment: dev
 
   source:
     config_file: "sources/github_api.yaml"

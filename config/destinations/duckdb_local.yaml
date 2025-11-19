@@ -3,7 +3,6 @@ destination:
   name: duckdb_local
   type: duckdb
   description: "Local DuckDB database for development and testing"
-  environment: dev
 
   connection:
     # Database file path (relative to project root)

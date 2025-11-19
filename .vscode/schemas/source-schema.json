@@ -12,7 +12,6 @@
       "required": [
         "name",
         "type",
-        "environment",
         "connection"
       ],
       "properties": {
@@ -34,15 +33,6 @@
             "stream"
           ],
           "description": "Type of data source"
-        },
-        "environment": {
-          "type": "string",
-          "enum": [
-            "dev",
-            "stage",
-            "prod"
-          ],
-          "description": "Environment for this configuration"
         },
         "connection": {
           "type": "object",

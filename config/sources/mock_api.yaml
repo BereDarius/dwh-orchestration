@@ -4,7 +4,6 @@ source:
   name: mock_api
   type: rest_api
   description: "Mock REST API for local testing (uses JSONPlaceholder)"
-  environment: dev
 
   connection:
     base_url: "https://jsonplaceholder.typicode.com"

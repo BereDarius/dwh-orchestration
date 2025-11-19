@@ -4,7 +4,6 @@ trigger:
   description: "Webhook trigger for external systems to trigger data refresh"
   type: webhook
   enabled: true
-  environment: dev
 
   # Job to execute
   job: daily_data_ingestion.yaml

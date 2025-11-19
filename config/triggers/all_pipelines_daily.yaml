@@ -4,7 +4,6 @@ trigger:
   description: "Run all configured pipelines once per day"
   type: cron
   enabled: true
-  environment: dev
 
   # Job to execute
   job: all_pipelines_job.yaml

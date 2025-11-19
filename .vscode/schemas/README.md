@@ -22,7 +22,7 @@ Validates data source configurations with type-specific validation.
 - Retry and timeout configurations
 - Resource-level configuration (endpoints, queries, etc.)
 
-**Example:** `config/environments/dev/sources/github_api.yaml`
+**Example:** `config/sources/github_api.yaml`
 
 ---
 
@@ -44,7 +44,7 @@ Validates data destination configurations with extensive type-specific settings.
 - Destination-specific settings (naming conventions, staging, optimization)
 - Retry and timeout policies
 
-**Example:** `config/environments/dev/destinations/local_duckdb.yaml`
+**Example:** `config/destinations/local_duckdb.yaml`
 
 ---
 
@@ -68,7 +68,7 @@ Validates data pipeline configurations that connect sources to destinations.
 - Monitoring and alerting configuration
 - Tags for organization
 
-**Example:** `config/environments/dev/pipelines/github_to_duckdb.yaml`
+**Example:** `config/pipelines/github_to_duckdb.yaml`
 
 ---
 
@@ -105,7 +105,7 @@ Validates job configurations - batches of pipelines with dependencies.
 - SLA monitoring
 - Metadata (owner, version, documentation)
 
-**Example:** `config/environments/dev/jobs/daily_data_ingestion.yaml`
+**Example:** `config/jobs/daily_data_ingestion.yaml`
 
 ---
 
@@ -133,10 +133,10 @@ Validates trigger configurations - defines when and how jobs are executed.
 
 **Examples:**
 
-- `config/environments/dev/triggers/daily_ingestion.yaml` (cron)
-- `config/environments/dev/triggers/realtime_monitoring.yaml` (interval)
-- `config/environments/dev/triggers/manual_backfill.yaml` (manual)
-- `config/environments/dev/triggers/webhook_refresh.yaml` (webhook)
+- `config/triggers/daily_ingestion.yaml` (cron)
+- `config/triggers/realtime_monitoring.yaml` (interval)
+- `config/triggers/manual_backfill.yaml` (manual)
+- `config/triggers/webhook_refresh.yaml` (webhook)
 
 ---
 
@@ -372,10 +372,10 @@ To validate your configuration files manually:
 pip install pyyaml jsonschema
 
 # Validate a job
-python -m jsonschema -i config/environments/dev/jobs/my_job.yaml .vscode/schemas/job-schema.json
+python -m jsonschema -i config/jobs/my_job.yaml .vscode/schemas/job-schema.json
 
 # Validate a trigger
-python -m jsonschema -i config/environments/dev/triggers/my_trigger.yaml .vscode/schemas/trigger-schema.json
+python -m jsonschema -i config/triggers/my_trigger.yaml .vscode/schemas/trigger-schema.json
 ```
 
 Or use the VS Code YAML extension which validates automatically!
@@ -386,10 +386,10 @@ Or use the VS Code YAML extension which validates automatically!
 
 See the example configurations in:
 
-- `config/environments/dev/jobs/` - Job examples
-- `config/environments/dev/triggers/` - Trigger examples
-- `config/environments/dev/pipelines/` - Pipeline examples
-- `config/environments/dev/sources/` - Source examples
+- `config/jobs/` - Job examples
+- `config/triggers/` - Trigger examples
+- `config/pipelines/` - Pipeline examples
+- `config/sources/` - Source examples
 - `config/environments/dev/destinations/` - Destination examples
 
 ---

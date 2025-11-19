@@ -4,7 +4,6 @@ trigger:
   description: "Execute hourly analytics job every hour"
   type: cron
   enabled: true
-  environment: dev
 
   # Job to execute
   job: hourly_analytics.yaml

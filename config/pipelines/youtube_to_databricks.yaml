@@ -2,7 +2,6 @@
 pipeline:
   name: youtube_to_databricks
   description: "Ingest YouTube channel and video data into Databricks"
-  environment: dev
 
   # Source configuration
   source:

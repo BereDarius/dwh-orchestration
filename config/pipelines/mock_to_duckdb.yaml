@@ -2,7 +2,6 @@
 pipeline:
   name: mock_to_duckdb
   description: "Load mock data from JSONPlaceholder to local DuckDB"
-  environment: dev
 
   source:
     config_file: "sources/mock_api.yaml"

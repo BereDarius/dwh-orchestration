@@ -42,34 +42,30 @@ def get_config_base_path() -> Path:
 
 def get_environment_config_path(environment: Environment | None = None) -> Path:
     """
-    Get the configuration path for a specific environment.
+    Get the configuration path (same for all environments).
+    Environment is now controlled via ENVIRONMENT variable, not directory structure.
 
     Args:
-        environment: Environment to get config for (defaults to current environment)
+        environment: Environment to get config for (ignored, kept for compatibility)
 
     Returns:
-        Path: Environment-specific configuration directory path
+        Path: Configuration directory path
     """
-    if environment is None:
-        environment = get_environment()
-
     base_path = get_config_base_path()
-    env_path = base_path / "environments" / environment.value
 
-    if not env_path.exists():
-        raise FileNotFoundError(
-            f"Configuration directory not found for environment {environment.value}: {env_path}"
-        )
+    if not base_path.exists():
+        raise FileNotFoundError(f"Configuration directory not found: {base_path}")
 
-    return env_path
+    return base_path
 
 
 def load_environment_config(config_type: str, filename: str) -> Path:
     """
-    Load configuration file for current environment.
+    Load configuration file.
+    Environment is now controlled via ENVIRONMENT variable, not directory structure.
 
     Args:
-        config_type: Type of config (sources, destinations, pipelines)
+        config_type: Type of config (sources, destinations, pipelines, jobs, triggers)
         filename: Name of the configuration file
 
     Returns:
@@ -78,8 +74,8 @@ def load_environment_config(config_type: str, filename: str) -> Path:
     Raises:
         FileNotFoundError: If configuration file doesn't exist
     """
-    env_path = get_environment_config_path()
-    config_path = env_path / config_type / filename
+    base_path = get_config_base_path()
+    config_path = base_path / config_type / filename
 
     if not config_path.exists():
         raise FileNotFoundError(f"Configuration file not found: {config_path}")

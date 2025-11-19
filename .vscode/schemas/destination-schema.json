@@ -12,7 +12,6 @@
       "required": [
         "name",
         "type",
-        "environment",
         "connection"
       ],
       "properties": {
@@ -43,15 +42,6 @@
             "motherduck"
           ],
           "description": "Type of destination"
-        },
-        "environment": {
-          "type": "string",
-          "enum": [
-            "dev",
-            "stage",
-            "prod"
-          ],
-          "description": "Environment for this configuration"
         },
         "connection": {
           "type": "object",

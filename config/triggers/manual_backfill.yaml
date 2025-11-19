@@ -4,7 +4,6 @@ trigger:
   description: "Manual trigger for running backfill jobs on demand"
   type: manual
   enabled: true
-  environment: dev
 
   # Job to execute
   job: daily_data_ingestion.yaml

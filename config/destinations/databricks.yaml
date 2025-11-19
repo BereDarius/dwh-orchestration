@@ -3,7 +3,6 @@ destination:
   name: databricks_dev
   type: databricks
   description: "Databricks development environment"
-  environment: dev
 
   connection:
     # These values map to GitHub Secrets

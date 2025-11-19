@@ -4,7 +4,6 @@ trigger:
   description: "Execute daily data ingestion job at 2 AM UTC"
   type: cron
   enabled: true
-  environment: dev
 
   # Job to execute
   job: daily_data_ingestion.yaml

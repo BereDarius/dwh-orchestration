@@ -68,7 +68,7 @@ def check_configuration() -> bool:
     """Check if configuration files exist."""
     print("\nChecking configuration files...")
 
-    config_dir = Path("config/environments/dev")
+    config_dir = Path("config")
 
     required_files = [
         "sources/youtube_api.yaml",
@@ -189,9 +189,9 @@ def show_next_steps() -> None:
     print("=" * 60)
 
     print("\n1. Review your configuration:")
-    print("   - config/environments/dev/sources/youtube_api.yaml")
-    print("   - config/environments/dev/destinations/databricks.yaml")
-    print("   - config/environments/dev/pipelines/youtube_to_databricks.yaml")
+    print("   - config/sources/youtube_api.yaml")
+    print("   - config/destinations/databricks.yaml")
+    print("   - config/pipelines/youtube_to_databricks.yaml")
 
     print("\n2. Set your environment variables in .env.dev:")
     print("   - YOUTUBE_API_KEY_DEV")

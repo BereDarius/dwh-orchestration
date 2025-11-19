@@ -4,7 +4,6 @@ source:
   name: github_api
   type: rest_api
   description: "GitHub API for repository statistics and activity"
-  environment: dev
 
   connection:
     base_url: "https://api.github.com"

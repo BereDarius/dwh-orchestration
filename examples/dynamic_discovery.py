@@ -109,12 +109,10 @@ def main() -> None:
     console.print("\n[bold]Step 4:[/bold] How to add a new pipeline...\n")
 
     console.print("[green]To add a new pipeline:[/green]")
-    console.print("  1. Create a YAML file in config/environments/dev/pipelines/")
+    console.print("  1. Create a YAML file in config/pipelines/")
     console.print("  2. Define your source, destination, and schedule")
     console.print("  3. Run this script again - it will be automatically discovered!")
-    console.print(
-        "\n[green]Example:[/green] Create config/environments/dev/pipelines/my_new_pipeline.yaml"
-    )
+    console.print("\n[green]Example:[/green] Create config/pipelines/my_new_pipeline.yaml")
 
     console.print("\n[bold green]✓ Dynamic discovery complete![/bold green]")
     console.print("\n[dim]All configurations are loaded dynamically from YAML files.[/dim]")

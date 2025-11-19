@@ -40,15 +40,6 @@
           "description": "Whether this trigger is enabled",
           "default": true
         },
-        "environment": {
-          "type": "string",
-          "enum": [
-            "dev",
-            "stage",
-            "prod"
-          ],
-          "description": "Environment where this trigger should run (if omitted, runs in all environments)"
-        },
         "job": {
           "type": "string",
           "description": "Job configuration file to execute (in jobs/ directory)",

@@ -115,3 +115,6 @@ tmp/
 temp/
 *.tmp
 .pids/
+
+# Old environment-based config structure (deprecated)
+config/environments/

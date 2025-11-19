@@ -11,7 +11,6 @@
       "type": "object",
       "required": [
         "name",
-        "environment",
         "pipelines"
       ],
       "properties": {
@@ -23,15 +22,6 @@
         "description": {
           "type": "string",
           "description": "Human-readable description of the job"
-        },
-        "environment": {
-          "type": "string",
-          "enum": [
-            "dev",
-            "stage",
-            "prod"
-          ],
-          "description": "Environment for this job"
         },
         "tags": {
           "type": "array",

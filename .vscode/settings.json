@@ -28,11 +28,11 @@
   },
 
   "yaml.schemas": {
-    ".vscode/schemas/source-schema.json": "config/**/sources/*.yaml",
-    ".vscode/schemas/destination-schema.json": "config/**/destinations/*.yaml",
-    ".vscode/schemas/pipeline-schema.json": "config/**/pipelines/*.yaml",
-    ".vscode/schemas/trigger-schema.json": "config/**/triggers/*.yaml",
-    ".vscode/schemas/job-schema.json": "config/**/jobs/*.yaml"
+    ".vscode/schemas/source-schema.json": "config/sources/*.yaml",
+    ".vscode/schemas/destination-schema.json": "config/destinations/*.yaml",
+    ".vscode/schemas/pipeline-schema.json": "config/pipelines/*.yaml",
+    ".vscode/schemas/trigger-schema.json": "config/triggers/*.yaml",
+    ".vscode/schemas/job-schema.json": "config/jobs/*.yaml"
   },
 
   "yaml.validate": true,

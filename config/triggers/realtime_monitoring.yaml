@@ -4,7 +4,6 @@ trigger:
   description: "Run monitoring job every 15 minutes"
   type: interval
   enabled: true
-  environment: dev
 
   # Job to execute
   job: hourly_analytics.yaml

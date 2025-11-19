@@ -50,7 +50,7 @@ python examples/run_youtube_pipeline.py
 
 **What it does:**
 
-1. Loads configuration from `config/environments/dev/`
+1. Loads configuration from `config/`
 2. Validates all configurations
 3. Checks that required secrets are available
 4. Displays configuration summary

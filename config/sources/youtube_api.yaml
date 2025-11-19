@@ -1,19 +1,19 @@
-# YouTube Analytics API Source Configuration (Staging)
+# YouTube Analytics API Source Configuration (Development)
 source:
   name: youtube_analytics
   type: rest_api
   description: "YouTube Analytics API for channel statistics and video data"
-  environment: stage
 
   connection:
     base_url: "https://www.googleapis.com/youtube/v3"
     auth:
       type: oauth2
+      # This key maps to GitHub Secret: YOUTUBE_API_KEY_DEV
       credentials_secret_key: "youtube_api_credentials_secret_key"
-    timeout: 60
+    timeout: 30
     retry:
       max_attempts: 5
-      backoff_factor: 3
+      backoff_factor: 2
       initial_delay: 1
 
   resources:
@@ -23,6 +23,7 @@ source:
       method: GET
       params:
         part: "statistics,snippet,contentDetails"
+        # Channel ID will be provided via config or CLI
         id: "{channel_id}"
 
       incremental:
@@ -32,6 +33,7 @@ source:
         initial_value: "2024-01-01T00:00:00Z"
 
       primary_key: ["id"]
+
       write_disposition: "merge"
 
       schema:
@@ -39,27 +41,35 @@ source:
           - name: id
             data_type: string
             nullable: false
+            description: "Channel ID"
           - name: title
             data_type: string
             nullable: false
+            description: "Channel title"
           - name: description
             data_type: string
             nullable: true
+            description: "Channel description"
           - name: subscriber_count
             data_type: integer
             nullable: true
+            description: "Total number of subscribers"
           - name: view_count
             data_type: integer
             nullable: true
+            description: "Total number of views"
           - name: video_count
             data_type: integer
             nullable: true
+            description: "Total number of videos"
           - name: published_at
             data_type: timestamp
             nullable: false
+            description: "Channel creation date"
           - name: _extracted_at
             data_type: timestamp
             nullable: false
+            description: "Timestamp when data was extracted"
 
       data_quality:
         checks:
@@ -71,6 +81,7 @@ source:
             columns: [id]
 
       pii_fields: []
+
       aliases:
         subscriber_count: total_subscribers
         view_count: total_views
@@ -82,6 +93,7 @@ source:
       method: GET
       params:
         part: "snippet,statistics,contentDetails"
+        # Video IDs will be fetched from previous resource or provided
         id: "{video_ids}"
         maxResults: 50
 
@@ -92,6 +104,7 @@ source:
         initial_value: "2024-01-01T00:00:00Z"
 
       primary_key: ["id"]
+
       write_disposition: "merge"
 
       schema:

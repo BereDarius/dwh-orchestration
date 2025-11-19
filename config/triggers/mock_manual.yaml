@@ -4,7 +4,6 @@ trigger:
   description: "Manual trigger for mock API pipeline (no schedule)"
   type: manual
   enabled: true
-  environment: dev
 
   # Job to execute
   job: mock_pipeline_job.yaml
